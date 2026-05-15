@@ -11,6 +11,22 @@ def create_app():
     def index():
         return render_template("index.html")
 
+    @app.route("/nuevo")
+    def nuevo():
+        return render_template("nuevo.html")
+
+    @app.route("/antiguo")
+    def antiguo():
+        return render_template("antiguo.html")
+
+    @app.route("/exito")
+    def exito():
+        return render_template("exito.html")
+
+    @app.route("/admin/logs")
+    def admin_logs():
+        return render_template("admin_logs.html")
+
     @app.route("/health")
     def health():
         return {
