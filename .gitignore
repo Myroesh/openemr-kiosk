@@ -1,0 +1,14 @@
+.env
+*.env
+config.local.php
+.htpasswd
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.pyc
+venv/
+.venv/
+logs/
+*.log
+.DS_Store

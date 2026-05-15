@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Acceso Recepcion"
+AuthUserFile /var/www/html/openemr/kiosko/admin/.htpasswd
+Require valid-user
