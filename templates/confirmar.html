@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Confirmar datos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="brand">
+        <h1>Confirmar datos</h1>
+        <p>Revise la información antes de guardar.</p>
+      </div>
+
+      <div class="summary">
+        <div class="summary-row">
+          <span>Nombre</span>
+          <strong>{{ data.nombres }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Apellido</span>
+          <strong>{{ data.apellidos }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Fecha de nacimiento</span>
+          <strong>{{ data.fecha_nacimiento }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>CI/documento</span>
+          <strong>{{ data.ci_documento or "No registrado" }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Teléfono</span>
+          <strong>{{ data.telefono }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Dirección</span>
+          <strong>{{ data.direccion or "No registrada" }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Motivo de consulta</span>
+          <strong>{{ data.motivo_consulta }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Profesional / área</span>
+          <strong>{{ data.profesional_area or "No especificado" }}</strong>
+        </div>
+
+        {% if data.es_menor %}
+          <div class="summary-row">
+            <span>Menor de edad</span>
+            <strong>Sí</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Padre</span>
+            <strong>{{ data.padre_nombre or "No registrado" }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>CI padre</span>
+            <strong>{{ data.padre_ci or "No registrado" }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Teléfono padre</span>
+            <strong>{{ data.padre_telefono or "No registrado" }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Madre</span>
+            <strong>{{ data.madre_nombre or "No registrada" }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>CI madre</span>
+            <strong>{{ data.madre_ci or "No registrado" }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Teléfono madre</span>
+            <strong>{{ data.madre_telefono or "No registrado" }}</strong>
+          </div>
+        {% endif %}
+      </div>
+
+      <form method="post" action="/confirmar" class="actions">
+        <button class="btn" type="submit">Confirmar y guardar</button>
+        <a class="btn btn-secondary" href="/nuevo">Corregir datos</a>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

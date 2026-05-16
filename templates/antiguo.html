@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Paciente antiguo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="brand">
+        <h1>Paciente antiguo</h1>
+        <p>Buscaremos al paciente por nombre y/o teléfono.</p>
+      </div>
+
+      {% if errors %}
+        <div class="alert">
+          {% for error in errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" action="/antiguo" class="form">
+        <label>Nombre del paciente</label>
+        <input name="nombre" type="text" value="{{ form.nombre or '' }}">
+
+        <label>Teléfono</label>
+        <input name="telefono" type="tel" value="{{ form.telefono or '' }}">
+
+        <label>Motivo de consulta</label>
+        <textarea name="motivo_consulta" required>{{ form.motivo_consulta or '' }}</textarea>
+
+        <div class="actions">
+          <button class="btn" type="submit">Continuar</button>
+          <a class="btn btn-secondary" href="/">Volver</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

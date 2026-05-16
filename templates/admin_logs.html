@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Logs del Kiosko</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="admin-page">
+    <section class="admin-card">
+      <div class="admin-header">
+        <div>
+          <h1>Logs del Kiosko</h1>
+          <p>Registros locales del MVP. Todavía no se envían datos a OpenEMR.</p>
+        </div>
+
+        <a class="small-link" href="/">Volver al kiosko</a>
+      </div>
+
+      <h2>Registros de paciente nuevo</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Paciente</th>
+              <th>CI</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in intakes %}
+              <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.created_at }}</td>
+                <td>{{ item.nombres }} {{ item.apellidos }}</td>
+                <td>{{ item.ci_documento or "—" }}</td>
+                <td>{{ item.telefono or "—" }}</td>
+                <td>{{ item.status }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6">Sin registros todavía.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Eventos del kiosko</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Evento</th>
+              <th>Flujo</th>
+              <th>Estado</th>
+              <th>Mensaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+              <tr>
+                <td>{{ event.id }}</td>
+                <td>{{ event.created_at }}</td>
+                <td>{{ event.event_type }}</td>
+                <td>{{ event.flow_type or "—" }}</td>
+                <td>{{ event.status }}</td>
+                <td>{{ event.message or "—" }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6">Sin eventos todavía.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

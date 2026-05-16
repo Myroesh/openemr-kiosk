@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Paciente nuevo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="brand">
+        <h1>Paciente nuevo</h1>
+        <p>Complete los datos básicos.</p>
+      </div>
+
+      {% if errors %}
+        <div class="alert">
+          {% for error in errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" action="/nuevo" class="form">
+        <label>Nombre</label>
+        <input name="nombres" type="text" required value="{{ form.nombres or '' }}">
+
+        <label>Apellido</label>
+        <input name="apellidos" type="text" required value="{{ form.apellidos or '' }}">
+
+        <label>Fecha de nacimiento</label>
+        <input name="fecha_nacimiento" type="date" required value="{{ form.fecha_nacimiento or '' }}">
+
+        <label>CI / documento <span class="optional">(opcional)</span></label>
+        <input name="ci_documento" type="text" inputmode="numeric" value="{{ form.ci_documento or '' }}">
+
+        <label>Celular</label>
+        <input name="telefono" type="tel" required value="{{ form.telefono or '' }}">
+
+        <label>Dirección</label>
+        <input name="direccion" type="text" value="{{ form.direccion or '' }}">
+
+        <label>Motivo de consulta</label>
+        <textarea name="motivo_consulta" required>{{ form.motivo_consulta or '' }}</textarea>
+
+        <label>Profesional o área de atención</label>
+        <input name="profesional_area" type="text" value="{{ form.profesional_area or '' }}">
+
+        <label>¿Es menor de edad?</label>
+        <select name="es_menor">
+          <option value="0" {% if not form.es_menor %}selected{% endif %}>No</option>
+          <option value="1" {% if form.es_menor %}selected{% endif %}>Sí</option>
+        </select>
+
+        <div class="section-subtitle">Datos del padre, si corresponde</div>
+
+        <label>Nombre del padre <span class="optional">(opcional)</span></label>
+        <input name="padre_nombre" type="text" value="{{ form.padre_nombre or '' }}">
+
+        <label>CI del padre <span class="optional">(opcional)</span></label>
+        <input name="padre_ci" type="text" inputmode="numeric" value="{{ form.padre_ci or '' }}">
+
+        <label>Teléfono del padre <span class="optional">(opcional)</span></label>
+        <input name="padre_telefono" type="tel" value="{{ form.padre_telefono or '' }}">
+
+        <div class="section-subtitle">Datos de la madre, si corresponde</div>
+
+        <label>Nombre de la madre <span class="optional">(opcional)</span></label>
+        <input name="madre_nombre" type="text" value="{{ form.madre_nombre or '' }}">
+
+        <label>CI de la madre <span class="optional">(opcional)</span></label>
+        <input name="madre_ci" type="text" inputmode="numeric" value="{{ form.madre_ci or '' }}">
+
+        <label>Teléfono de la madre <span class="optional">(opcional)</span></label>
+        <input name="madre_telefono" type="tel" value="{{ form.madre_telefono or '' }}">
+
+        <div class="actions">
+          <button class="btn" type="submit">Continuar</button>
+          <a class="btn btn-secondary" href="/">Volver</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
