@@ -9,6 +9,10 @@ from services.db_service import (
     list_recent_events,
     list_recent_intakes,
 )
+from services.validation_service import (
+    validate_new_patient_data,
+    validate_existing_patient_data,
+)
 
 
 def create_app():
@@ -24,57 +28,17 @@ def create_app():
     @app.route("/nuevo", methods=["GET", "POST"])
     def nuevo():
         if request.method == "POST":
-            data = {
-                "flow_type": "nuevo",
-                "nombres": request.form.get("nombres", "").strip(),
-                "apellidos": request.form.get("apellidos", "").strip(),
-                "fecha_nacimiento": request.form.get("fecha_nacimiento", "").strip(),
-                "ci_documento": request.form.get("ci_documento", "").strip(),
-                "telefono": request.form.get("telefono", "").strip(),
-                "direccion": request.form.get("direccion", "").strip(),
-                "motivo_consulta": request.form.get("motivo_consulta", "").strip(),
-                "profesional_area": request.form.get("profesional_area", "").strip(),
-                "es_menor": 1 if request.form.get("es_menor") == "1" else 0,
-                "padre_nombre": request.form.get("padre_nombre", "").strip(),
-                "padre_ci": request.form.get("padre_ci", "").strip(),
-                "padre_telefono": request.form.get("padre_telefono", "").strip(),
-                "madre_nombre": request.form.get("madre_nombre", "").strip(),
-                "madre_ci": request.form.get("madre_ci", "").strip(),
-                "madre_telefono": request.form.get("madre_telefono", "").strip(),
-            }
-
-            errors = []
-
-            if not data["nombres"]:
-                errors.append("El nombre es obligatorio.")
-
-            if not data["apellidos"]:
-                errors.append("El apellido es obligatorio.")
-
-            if not data["fecha_nacimiento"]:
-                errors.append("La fecha de nacimiento es obligatoria.")
-
-            if not data["telefono"]:
-                errors.append("El teléfono es obligatorio.")
-
-            if not data["motivo_consulta"]:
-                errors.append("El motivo de consulta es obligatorio.")
-
-            if not data["profesional_area"]:
-                errors.append("Debe seleccionar un profesional.")
-
-            if data["profesional_area"] and data["profesional_area"] not in Config.PROFESSIONALS:
-                errors.append("El profesional seleccionado no es válido.")
-
-            if data["es_menor"] and not data["padre_nombre"] and not data["madre_nombre"]:
-                errors.append("Para menores de edad, registre al menos el nombre del padre o de la madre.")
+            data, errors = validate_new_patient_data(
+                request.form,
+                Config.PROFESSIONALS,
+            )
 
             if errors:
                 create_kiosk_event(
                     event_type="validation_error",
                     flow_type="nuevo",
                     status="error",
-                    message="Formulario de paciente nuevo con datos incompletos",
+                    message="Formulario de paciente nuevo con datos incompletos o inválidos",
                     metadata={"errors": errors},
                 )
 
@@ -91,7 +55,7 @@ def create_app():
                 event_type="pending_confirmation",
                 flow_type="nuevo",
                 status="ok",
-                message="Datos capturados, pendientes de confirmación final",
+                message="Datos capturados, normalizados y pendientes de confirmación final",
                 metadata={
                     "ci_documento_present": bool(data.get("ci_documento")),
                     "telefono_present": bool(data.get("telefono")),
@@ -114,34 +78,17 @@ def create_app():
     @app.route("/antiguo", methods=["GET", "POST"])
     def antiguo():
         if request.method == "POST":
-            data = {
-                "flow_type": "antiguo",
-                "nombre": request.form.get("nombre", "").strip(),
-                "telefono": request.form.get("telefono", "").strip(),
-                "profesional_area": request.form.get("profesional_area", "").strip(),
-                "motivo_consulta": request.form.get("motivo_consulta", "").strip(),
-            }
-
-            errors = []
-
-            if not data["nombre"] and not data["telefono"]:
-                errors.append("Debe ingresar nombre del paciente o teléfono.")
-
-            if not data["profesional_area"]:
-                errors.append("Debe seleccionar un profesional.")
-
-            if data["profesional_area"] and data["profesional_area"] not in Config.PROFESSIONALS:
-                errors.append("El profesional seleccionado no es válido.")
-
-            if not data["motivo_consulta"]:
-                errors.append("Debe ingresar el motivo de consulta.")
+            data, errors = validate_existing_patient_data(
+                request.form,
+                Config.PROFESSIONALS,
+            )
 
             if errors:
                 create_kiosk_event(
                     event_type="validation_error",
                     flow_type="antiguo",
                     status="error",
-                    message="Búsqueda de paciente antiguo con datos incompletos",
+                    message="Búsqueda de paciente antiguo con datos incompletos o inválidos",
                     metadata={"errors": errors},
                 )
 
@@ -158,7 +105,7 @@ def create_app():
                 event_type="pending_confirmation",
                 flow_type="antiguo",
                 status="ok",
-                message="Datos de paciente antiguo capturados, pendientes de confirmación final",
+                message="Datos de paciente antiguo capturados, normalizados y pendientes de confirmación final",
                 metadata={
                     "nombre_present": bool(data.get("nombre")),
                     "telefono_present": bool(data.get("telefono")),
