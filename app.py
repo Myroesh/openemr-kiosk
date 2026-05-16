@@ -60,8 +60,15 @@ def create_app():
             if not data["motivo_consulta"]:
                 errors.append("El motivo de consulta es obligatorio.")
 
+            if not data["profesional_area"]:
+                errors.append("Debe seleccionar un profesional.")
+
+            if data["profesional_area"] and data["profesional_area"] not in Config.PROFESSIONALS:
+                errors.append("El profesional seleccionado no es válido.")
+
             if data["es_menor"] and not data["padre_nombre"] and not data["madre_nombre"]:
                 errors.append("Para menores de edad, registre al menos el nombre del padre o de la madre.")
+
             if errors:
                 create_kiosk_event(
                     event_type="validation_error",
@@ -88,6 +95,10 @@ def create_app():
                 metadata={
                     "ci_documento_present": bool(data.get("ci_documento")),
                     "telefono_present": bool(data.get("telefono")),
+                    "es_menor": bool(data.get("es_menor")),
+                    "padre_present": bool(data.get("padre_nombre")),
+                    "madre_present": bool(data.get("madre_nombre")),
+                    "profesional_area": data.get("profesional_area"),
                 },
             )
 
@@ -105,17 +116,23 @@ def create_app():
         if request.method == "POST":
             nombre = request.form.get("nombre", "").strip()
             telefono = request.form.get("telefono", "").strip()
-            motivo_consulta = request.form.get("motivo_consulta", "").strip()
             profesional_area = request.form.get("profesional_area", "").strip()
+            motivo_consulta = request.form.get("motivo_consulta", "").strip()
+
             errors = []
 
             if not nombre and not telefono:
                 errors.append("Debe ingresar nombre del paciente o teléfono.")
 
+            if not profesional_area:
+                errors.append("Debe seleccionar un profesional.")
+
+            if profesional_area and profesional_area not in Config.PROFESSIONALS:
+                errors.append("El profesional seleccionado no es válido.")
+
             if not motivo_consulta:
                 errors.append("Debe ingresar el motivo de consulta.")
-            if data["profesional_area"] and data["profesional_area"] not in Config.PROFESSIONALS:
-                errors.append("El profesional seleccionado no es válido.")
+
             if errors:
                 create_kiosk_event(
                     event_type="validation_error",
@@ -133,9 +150,8 @@ def create_app():
                         "telefono": telefono,
                         "profesional_area": profesional_area,
                         "motivo_consulta": motivo_consulta,
-                        
                     },
-                    professionals=Config.PROFESSIONALS,  
+                    professionals=Config.PROFESSIONALS,
                 )
 
             create_kiosk_event(
@@ -153,7 +169,12 @@ def create_app():
 
             return redirect(url_for("exito"))
 
-        return render_template("antiguo.html", errors=[], form={})
+        return render_template(
+            "antiguo.html",
+            errors=[],
+            form={},
+            professionals=Config.PROFESSIONALS,
+        )
 
     @app.route("/confirmar", methods=["GET", "POST"])
     def confirmar():
@@ -191,7 +212,7 @@ def create_app():
         return {
             "status": "ok",
             "service": "openemr-kiosk",
-            "version": "flask-mvp"
+            "version": "flask-mvp",
         }
 
     @app.route("/health/gemini")
@@ -204,14 +225,14 @@ def create_app():
                 "status": "ok",
                 "service": "gemini",
                 "model": Config.GEMINI_MODEL,
-                "response": result
+                "response": result,
             })
 
         except Exception as e:
             return jsonify({
                 "status": "error",
                 "service": "gemini",
-                "message": str(e)
+                "message": str(e),
             }), 500
 
     return app

@@ -46,12 +46,12 @@
 
         <label>Profesional</label>
         <select name="profesional_area">
-        <option value="">Seleccione un profesional</option>
-        {% for professional in professionals %}
+          <option value="">Seleccione un profesional</option>
+          {% for professional in professionals %}
             <option value="{{ professional }}" {% if form.profesional_area == professional %}selected{% endif %}>
-            {{ professional }}
+              {{ professional }}
             </option>
-        {% endfor %}
+          {% endfor %}
         </select>
 
         <label>¿Es menor de edad?</label>
