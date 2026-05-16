@@ -18,6 +18,9 @@ class Config:
     OPENEMR_USERNAME = os.getenv("OPENEMR_USERNAME")
     OPENEMR_PASSWORD = os.getenv("OPENEMR_PASSWORD")
 
+    ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
     PROFESSIONALS = [
         "Dra. Ana Maria Saavedra",
         "Dra. Evelyn vidal",

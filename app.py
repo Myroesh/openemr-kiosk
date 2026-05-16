@@ -1,4 +1,15 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session
+from functools import wraps
+
+from flask import (
+    Flask,
+    render_template,
+    jsonify,
+    request,
+    redirect,
+    url_for,
+    session,
+    Response,
+)
 
 from config import Config
 from services.gemini_service import GeminiService
@@ -13,6 +24,31 @@ from services.validation_service import (
     validate_new_patient_data,
     validate_existing_patient_data,
 )
+
+
+def check_admin_auth(username, password):
+    return (
+        username == Config.ADMIN_USERNAME
+        and Config.ADMIN_PASSWORD
+        and password == Config.ADMIN_PASSWORD
+    )
+
+
+def admin_auth_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        auth = request.authorization
+
+        if not auth or not check_admin_auth(auth.username, auth.password):
+            return Response(
+                "Acceso restringido al panel interno del kiosko.",
+                401,
+                {"WWW-Authenticate": 'Basic realm="OpenEMR Kiosk Admin"'},
+            )
+
+        return view_func(*args, **kwargs)
+
+    return wrapper
 
 
 def create_app():
@@ -171,6 +207,7 @@ def create_app():
         return render_template("exito.html", intake_id=intake_id)
 
     @app.route("/admin/logs")
+    @admin_auth_required
     def admin_logs():
         events = list_recent_events(limit=100)
         intakes = list_recent_intakes(limit=100)
