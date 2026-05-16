@@ -24,7 +24,7 @@ def create_app():
     @app.route("/nuevo", methods=["GET", "POST"])
     def nuevo():
         if request.method == "POST":
-                        data = {
+            data = {
                 "flow_type": "nuevo",
                 "nombres": request.form.get("nombres", "").strip(),
                 "apellidos": request.form.get("apellidos", "").strip(),
@@ -43,7 +43,7 @@ def create_app():
                 "madre_telefono": request.form.get("madre_telefono", "").strip(),
             }
 
-                errors = []
+            errors = []
 
             if not data["nombres"]:
                 errors.append("El nombre es obligatorio.")
