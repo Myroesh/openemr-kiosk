@@ -18,4 +18,11 @@ class Config:
     OPENEMR_USERNAME = os.getenv("OPENEMR_USERNAME")
     OPENEMR_PASSWORD = os.getenv("OPENEMR_PASSWORD")
 
+    PROFESSIONALS = [
+        "Dra. Ana Maria Saavedra",
+        "Dra. Evelyn vidal",
+        "Dra. Katherine",
+        "Dr. Luis",
+    ]
+
     KIOSK_DB_PATH = os.getenv("KIOSK_DB_PATH", "data/kiosk.db")

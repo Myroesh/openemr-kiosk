@@ -71,7 +71,12 @@ def create_app():
                     metadata={"errors": errors},
                 )
 
-                return render_template("nuevo.html", errors=errors, form=data)
+                return render_template(
+                    "nuevo.html",
+                    errors=errors,
+                    form=data,
+                    professionals=Config.PROFESSIONALS,
+                )
 
             session["pending_intake"] = data
 
@@ -88,7 +93,12 @@ def create_app():
 
             return redirect(url_for("confirmar"))
 
-        return render_template("nuevo.html", errors=[], form={})
+        return render_template(
+            "nuevo.html",
+            errors=[],
+            form={},
+            professionals=Config.PROFESSIONALS,
+        )
 
     @app.route("/antiguo", methods=["GET", "POST"])
     def antiguo():
@@ -96,6 +106,7 @@ def create_app():
             nombre = request.form.get("nombre", "").strip()
             telefono = request.form.get("telefono", "").strip()
             motivo_consulta = request.form.get("motivo_consulta", "").strip()
+            profesional_area = request.form.get("profesional_area", "").strip()
             errors = []
 
             if not nombre and not telefono:
@@ -103,7 +114,8 @@ def create_app():
 
             if not motivo_consulta:
                 errors.append("Debe ingresar el motivo de consulta.")
-
+            if data["profesional_area"] and data["profesional_area"] not in Config.PROFESSIONALS:
+                errors.append("El profesional seleccionado no es válido.")
             if errors:
                 create_kiosk_event(
                     event_type="validation_error",
@@ -119,8 +131,11 @@ def create_app():
                     form={
                         "nombre": nombre,
                         "telefono": telefono,
+                        "profesional_area": profesional_area,
                         "motivo_consulta": motivo_consulta,
-                    },  
+                        
+                    },
+                    professionals=Config.PROFESSIONALS,  
                 )
 
             create_kiosk_event(
@@ -131,6 +146,7 @@ def create_app():
                 metadata={
                     "nombre_present": bool(nombre),
                     "telefono_present": bool(telefono),
+                    "profesional_area": profesional_area,
                     "motivo_consulta_present": bool(motivo_consulta),
                 },
             )

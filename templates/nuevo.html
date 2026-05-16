@@ -44,8 +44,15 @@
         <label>Motivo de consulta</label>
         <textarea name="motivo_consulta" required>{{ form.motivo_consulta or '' }}</textarea>
 
-        <label>Profesional o área de atención</label>
-        <input name="profesional_area" type="text" value="{{ form.profesional_area or '' }}">
+        <label>Profesional</label>
+        <select name="profesional_area">
+        <option value="">Seleccione un profesional</option>
+        {% for professional in professionals %}
+            <option value="{{ professional }}" {% if form.profesional_area == professional %}selected{% endif %}>
+            {{ professional }}
+            </option>
+        {% endfor %}
+        </select>
 
         <label>¿Es menor de edad?</label>
         <select name="es_menor">
