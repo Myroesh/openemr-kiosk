@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Confirmar paciente antiguo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="brand">
+        <h1>Confirmar datos</h1>
+        <p>Revise la información antes de continuar.</p>
+      </div>
+
+      <div class="summary">
+        <div class="summary-row">
+          <span>Nombre del paciente</span>
+          <strong>{{ data.nombre or "No registrado" }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Teléfono</span>
+          <strong>{{ data.telefono or "No registrado" }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Profesional</span>
+          <strong>{{ data.profesional_area }}</strong>
+        </div>
+
+        <div class="summary-row">
+          <span>Motivo de consulta</span>
+          <strong>{{ data.motivo_consulta }}</strong>
+        </div>
+      </div>
+
+      <form method="post" action="/confirmar-antiguo" class="actions">
+        <button class="btn" type="submit">Confirmar y continuar</button>
+        <a class="btn btn-secondary" href="/antiguo">Corregir datos</a>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

@@ -114,23 +114,26 @@ def create_app():
     @app.route("/antiguo", methods=["GET", "POST"])
     def antiguo():
         if request.method == "POST":
-            nombre = request.form.get("nombre", "").strip()
-            telefono = request.form.get("telefono", "").strip()
-            profesional_area = request.form.get("profesional_area", "").strip()
-            motivo_consulta = request.form.get("motivo_consulta", "").strip()
+            data = {
+                "flow_type": "antiguo",
+                "nombre": request.form.get("nombre", "").strip(),
+                "telefono": request.form.get("telefono", "").strip(),
+                "profesional_area": request.form.get("profesional_area", "").strip(),
+                "motivo_consulta": request.form.get("motivo_consulta", "").strip(),
+            }
 
             errors = []
 
-            if not nombre and not telefono:
+            if not data["nombre"] and not data["telefono"]:
                 errors.append("Debe ingresar nombre del paciente o teléfono.")
 
-            if not profesional_area:
+            if not data["profesional_area"]:
                 errors.append("Debe seleccionar un profesional.")
 
-            if profesional_area and profesional_area not in Config.PROFESSIONALS:
+            if data["profesional_area"] and data["profesional_area"] not in Config.PROFESSIONALS:
                 errors.append("El profesional seleccionado no es válido.")
 
-            if not motivo_consulta:
+            if not data["motivo_consulta"]:
                 errors.append("Debe ingresar el motivo de consulta.")
 
             if errors:
@@ -145,29 +148,26 @@ def create_app():
                 return render_template(
                     "antiguo.html",
                     errors=errors,
-                    form={
-                        "nombre": nombre,
-                        "telefono": telefono,
-                        "profesional_area": profesional_area,
-                        "motivo_consulta": motivo_consulta,
-                    },
+                    form=data,
                     professionals=Config.PROFESSIONALS,
                 )
 
+            session["pending_existing"] = data
+
             create_kiosk_event(
-                event_type="existing_patient_search_requested",
+                event_type="pending_confirmation",
                 flow_type="antiguo",
-                status="pending_openemr",
-                message="Búsqueda de paciente antiguo registrada localmente",
+                status="ok",
+                message="Datos de paciente antiguo capturados, pendientes de confirmación final",
                 metadata={
-                    "nombre_present": bool(nombre),
-                    "telefono_present": bool(telefono),
-                    "profesional_area": profesional_area,
-                    "motivo_consulta_present": bool(motivo_consulta),
+                    "nombre_present": bool(data.get("nombre")),
+                    "telefono_present": bool(data.get("telefono")),
+                    "profesional_area": data.get("profesional_area"),
+                    "motivo_consulta_present": bool(data.get("motivo_consulta")),
                 },
             )
 
-            return redirect(url_for("exito"))
+            return redirect(url_for("confirmar_antiguo"))
 
         return render_template(
             "antiguo.html",
@@ -190,6 +190,33 @@ def create_app():
             return redirect(url_for("exito", intake_id=intake_id))
 
         return render_template("confirmar.html", data=data)
+
+    @app.route("/confirmar-antiguo", methods=["GET", "POST"])
+    def confirmar_antiguo():
+        data = session.get("pending_existing")
+
+        if not data:
+            return redirect(url_for("index"))
+
+        if request.method == "POST":
+            create_kiosk_event(
+                event_type="existing_patient_search_confirmed",
+                flow_type="antiguo",
+                status="pending_openemr",
+                message="Paciente antiguo confirmado localmente; pendiente búsqueda/encounter en OpenEMR",
+                metadata={
+                    "nombre_present": bool(data.get("nombre")),
+                    "telefono_present": bool(data.get("telefono")),
+                    "profesional_area": data.get("profesional_area"),
+                    "motivo_consulta_present": bool(data.get("motivo_consulta")),
+                },
+            )
+
+            session.pop("pending_existing", None)
+
+            return redirect(url_for("exito"))
+
+        return render_template("confirmar_antiguo.html", data=data)
 
     @app.route("/exito")
     def exito():
