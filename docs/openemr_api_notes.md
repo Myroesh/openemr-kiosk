@@ -28,7 +28,9 @@ Estado verificado en:
 
 Swagger confirmado en:
 
-```text http://100.124.189.84/swagger/```
+```text 
+http://100.124.189.84/swagger/
+```
 
 ## API Clients
 
