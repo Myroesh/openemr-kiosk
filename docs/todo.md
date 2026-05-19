@@ -252,22 +252,40 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 cd /opt/openemr-kiosk
 source .venv/bin/activate
 python app.py
+```
 
+```bash
 git status
 git add .
 git commit -m "mensaje"
-git push
+git push origin flask-mvp
+```
 
+URLs de desarrollo según documento base:
+
+```text
 http://100.124.189.84:5000
 http://100.124.189.84:5000/health
+```
 
-Registro de decisiones
-2026-05-15: Usar Gemini Flash como IA del kiosko.
-2026-05-15: Usar Flask como backend.
-2026-05-15: Desarrollar vía VS Code Remote SSH.
-2026-05-15: No conectar tablet directamente a OpenEMR.
-2026-05-15: Separar PHP anterior en legacy_php/ y empezar Flask limpio.
-2026-05-15: Usar HTTP en puerto 5000 solo para desarrollo; HTTPS se definirá después.
-2026-05-15: Configurar GEMINI_API_KEY solo en .env local; no subir secretos al repositorio.
-2026-05-15: Usar SQLite local para logs/registros temporales del MVP antes de integrar OpenEMR.
-2026-05-15: Crear rutas base /nuevo, /antiguo, /exito y /admin/logs antes de conectar OpenEMR.
+---
+
+# Registro de decisiones
+
+- 2026-05-15: Usar Gemini Flash como IA del kiosko.
+- 2026-05-15: Usar Flask como backend.
+- 2026-05-15: Desarrollar vía VS Code Remote SSH.
+- 2026-05-15: No conectar tablet directamente a OpenEMR.
+- 2026-05-15: Separar PHP anterior en `legacy_php/` y empezar Flask limpio.
+- 2026-05-15: Usar HTTP en puerto `5000` solo para desarrollo; HTTPS se definirá después.
+- 2026-05-15: Configurar `GEMINI_API_KEY` solo en `.env` local; no subir secretos al repositorio.
+- 2026-05-15: Usar SQLite local para logs/registros temporales del MVP antes de integrar OpenEMR.
+- 2026-05-15: Crear rutas base `/nuevo`, `/antiguo`, `/exito` y `/admin/logs` antes de conectar OpenEMR.
+
+---
+
+# Nota de mantenimiento
+
+Este `todo.md` fue creado a partir del documento base original.
+
+Después debe actualizarse contra el estado real del repo y contra `docs/openemr_api_notes.md`, pero esa actualización debe hacerse como una segunda pasada para no mezclar fuente base con avance posterior.
