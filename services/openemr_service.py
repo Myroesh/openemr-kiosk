@@ -19,6 +19,7 @@ class OpenEMRService:
     Bloque actual:
     - Obtener/usar Bearer token.
     - Probar lectura segura de pacientes.
+    - Buscar pacientes de forma segura.
     - No crear pacientes.
     - No crear encounters.
     """
@@ -26,10 +27,10 @@ class OpenEMRService:
     def __init__(self):
         self.base_url = self._clean_base_url(Config.OPENEMR_BASE_URL)
         self.site = Config.OPENEMR_SITE or "default"
-        self.client_id = Config.OPENEMR_CLIENT_ID
-        self.client_secret = Config.OPENEMR_CLIENT_SECRET
-        self.access_token = Config.OPENEMR_ACCESS_TOKEN
-        self.refresh_token = Config.OPENEMR_REFRESH_TOKEN
+        self.client_id = self._clean_optional_secret(Config.OPENEMR_CLIENT_ID)
+        self.client_secret = self._clean_optional_secret(Config.OPENEMR_CLIENT_SECRET)
+        self.access_token = self._clean_optional_secret(Config.OPENEMR_ACCESS_TOKEN)
+        self.refresh_token = self._clean_optional_secret(Config.OPENEMR_REFRESH_TOKEN)
         self.verify_ssl = Config.OPENEMR_VERIFY_SSL
 
         self.session = requests.Session()
@@ -42,7 +43,53 @@ class OpenEMRService:
         if not value:
             return ""
 
-        return value.rstrip("/")
+        return str(value).strip().rstrip("/")
+
+    @staticmethod
+    def _clean_optional_secret(value):
+        if not value:
+            return ""
+
+        value = str(value).strip()
+
+        placeholders = {
+            "TU_CLIENT_ID_REAL",
+            "TU_CLIENT_SECRET_REAL",
+            "TU_ACCESS_TOKEN_REAL",
+            "TU_REFRESH_TOKEN_REAL",
+            "PEGAR_TOKEN_DE_SWAGGER",
+            "TOKEN_TEMPORAL_COPIADO_DE_SWAGGER",
+        }
+
+        if value in placeholders:
+            return ""
+
+        return value
+
+    @staticmethod
+    def _normalize_search_text(value):
+        if value is None:
+            return ""
+
+        value = str(value).lower().strip()
+        value = re.sub(r"\s+", " ", value)
+        return value
+
+    @staticmethod
+    def _digits_only(value):
+        if value is None:
+            return ""
+
+        return re.sub(r"\D+", "", str(value))
+
+    @staticmethod
+    def _first_existing(patient, keys):
+        for key in keys:
+            value = patient.get(key)
+            if value not in (None, ""):
+                return value
+
+        return ""
 
     @property
     def api_base_url(self):
@@ -152,7 +199,7 @@ class OpenEMRService:
             and retry_on_unauthorized
             and self.refresh_token
         ):
-            self.access_token = None
+            self.access_token = ""
             self._refresh_access_token()
             return self._request(
                 method=method,
@@ -187,6 +234,135 @@ class OpenEMRService:
         """
 
         return self._request("GET", "/patient")
+
+    def _patient_search_blob(self, patient):
+        fields = [
+            "fname",
+            "mname",
+            "lname",
+            "name",
+            "pubpid",
+            "pid",
+            "uuid",
+            "puuid",
+            "phone_cell",
+            "phone_contact",
+            "phone_home",
+            "phone_biz",
+            "phone",
+            "email",
+        ]
+
+        parts = []
+
+        for field in fields:
+            value = patient.get(field)
+            if value not in (None, ""):
+                parts.append(str(value))
+
+        return self._normalize_search_text(" ".join(parts))
+
+    def _patient_phone_blob(self, patient):
+        fields = [
+            "phone_cell",
+            "phone_contact",
+            "phone_home",
+            "phone_biz",
+            "phone",
+        ]
+
+        parts = []
+
+        for field in fields:
+            value = patient.get(field)
+            if value not in (None, ""):
+                parts.append(str(value))
+
+        return self._digits_only(" ".join(parts))
+
+    def _public_patient_summary(self, patient):
+        """
+        Resumen limitado para pruebas internas.
+
+        No devuelve el objeto completo de OpenEMR para evitar exponer más datos
+        de los necesarios en la ruta de diagnóstico.
+        """
+
+        return {
+            "pid": self._first_existing(patient, ["pid", "id"]),
+            "uuid": self._first_existing(patient, ["uuid", "puuid"]),
+            "pubpid": self._first_existing(patient, ["pubpid"]),
+            "fname": self._first_existing(patient, ["fname"]),
+            "lname": self._first_existing(patient, ["lname"]),
+            "DOB": self._first_existing(patient, ["DOB", "dob", "date_of_birth"]),
+            "phone_cell": self._first_existing(patient, ["phone_cell"]),
+            "phone_contact": self._first_existing(patient, ["phone_contact"]),
+        }
+
+    def search_patients(self, query=None, phone=None, limit=10):
+        """
+        Búsqueda segura inicial de pacientes.
+
+        Por ahora NO inventamos filtros remotos de OpenEMR.
+        Se usa GET /patient confirmado y se filtra localmente en Flask.
+
+        Esto es suficiente para el MVP actual porque la base tiene pocos pacientes.
+        Luego, si confirmamos filtros reales en Swagger/OpenEMR, se puede optimizar.
+        """
+
+        payload = self.get_patients()
+        patients = payload.get("data", [])
+
+        if not isinstance(patients, list):
+            return {
+                "status": "ok",
+                "source": "openemr",
+                "filter_mode": "local",
+                "total_loaded": 0,
+                "matched_count": 0,
+                "patients": [],
+            }
+
+        query = self._normalize_search_text(query)
+        phone = self._digits_only(phone)
+
+        try:
+            limit = int(limit)
+        except (TypeError, ValueError):
+            limit = 10
+
+        limit = max(1, min(limit, 25))
+
+        matches = []
+
+        for patient in patients:
+            text_blob = self._patient_search_blob(patient)
+            phone_blob = self._patient_phone_blob(patient)
+
+            query_match = True
+            phone_match = True
+
+            if query:
+                query_terms = query.split(" ")
+                query_match = all(term in text_blob for term in query_terms)
+
+            if phone:
+                phone_match = phone in phone_blob
+
+            if query_match and phone_match:
+                matches.append(self._public_patient_summary(patient))
+
+            if len(matches) >= limit:
+                break
+
+        return {
+            "status": "ok",
+            "source": "openemr",
+            "filter_mode": "local",
+            "total_loaded": len(patients),
+            "matched_count": len(matches),
+            "patients": matches,
+        }
 
     def health_check(self):
         """
