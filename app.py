@@ -247,8 +247,6 @@ def create_app():
                 "message": str(e),
             }), 500
 
-    return app
-    
     @app.route("/health/openemr")
     @admin_auth_required
     def health_openemr():
@@ -268,6 +266,11 @@ def create_app():
                 "service": "openemr",
                 "message": str(e),
             }), 500
+
+
+    return app
+
+    
 
 app = create_app()
 
