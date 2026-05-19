@@ -99,7 +99,7 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Actualizar pantalla inicial con botones reales: `/nuevo` y `/antiguo`.
 - [x] Crear ruta `/nuevo` con formulario inicial de paciente nuevo.
 - [x] Crear ruta `/antiguo` con búsqueda por CI/documento o teléfono.
-- [ ] Crear ruta `/confirmar` para mostrar resumen antes de guardar.
+- [x    ] Crear ruta `/confirmar` para mostrar resumen antes de guardar.
 - [x] Crear ruta `/exito` con mensaje final: “Registro completado, espere a ser llamado”.
 - [~] Crear diseño responsive para tablet.
   - Nota base: CSS responsive creado; falta ajustar/probar específicamente en tablet.
@@ -111,50 +111,82 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 - [x] Definir si usaremos SQLite local para logs del MVP.
   - Decisión base: usar SQLite local para logs y registros temporales del kiosko.
-- [ ] Crear tabla `kiosk_events` o `registros_kiosko`.
-- [ ] Registrar fecha/hora, flujo, estado, mensaje de error y datos mínimos no sensibles.
-- [~] Crear panel `/admin/logs` protegido de forma simple para revisión interna.
-  - Nota base: ruta `/admin/logs` y template creados como base; falta conectar a BD y proteger acceso.
+- [x] Crear tabla `kiosk_events` o `registros_kiosko`.
+  - Confirmado en `services/db_service.py`: tabla `kiosk_events` creada con `created_at`, `event_type`, `flow_type`, `status`, `message`, `intake_id` y `metadata_json`.
+
+- [x] Registrar fecha/hora, flujo, estado, mensaje de error y datos mínimos no sensibles.
+  - Confirmado en `create_kiosk_event()`: registra eventos con fecha/hora, tipo de flujo, estado, mensaje y metadata controlada.
+
+- [x] Crear panel `/admin/logs` protegido de forma simple para revisión interna.
+  - Confirmado en `app.py`: `/admin/logs` usa `@admin_auth_required` y muestra eventos/intakes desde SQLite.
 - [ ] Evitar almacenar más datos clínicos de los necesarios en logs.
 
 ---
 
 ## Fase 3 - Descubrimiento real de API OpenEMR
 
-- [ ] Confirmar versión exacta de OpenEMR en `Administration -> System -> About`.
-- [ ] Confirmar API activa en `Administration -> Config/Globals -> Connectors`.
-- [ ] Confirmar Site Address correcto.
-- [ ] Confirmar si el servidor OpenEMR usa HTTP local o HTTPS.
-- [ ] Entrar al Swagger correcto de esta instalación.
-- [ ] Identificar endpoints reales para buscar paciente.
-- [ ] Identificar endpoint real para crear paciente.
-- [ ] Identificar endpoint real para crear encounter.
-- [ ] Identificar si necesitamos consultar usuarios/profesionales/facility.
-- [ ] Guardar notas de endpoints verificados en `docs/openemr_api_notes.md`.
+- [x] Confirmar versión exacta de OpenEMR en `Administration -> System -> About`.
+  - Confirmado: OpenEMR 7.0.2.
+
+- [x] Confirmar API activa en `Administration -> Config/Globals -> Connectors`.
+  - Confirmado: Standard REST API y FHIR REST API activas.
+
+- [x] Confirmar Site Address correcto.
+  - Confirmado: `https://100.124.189.84`.
+
+- [x] Confirmar si el servidor OpenEMR usa HTTP local o HTTPS.
+  - Confirmado: Swagger/API funcional por HTTPS.
+
+- [x] Entrar al Swagger correcto de esta instalación.
+  - Confirmado: `https://100.124.189.84/swagger/`.
+
+- [x] Identificar endpoints reales para buscar paciente.
+  - Confirmado: `GET /apis/default/api/patient`.
+
+- [x] Identificar endpoint real para crear paciente.
+  - Identificado: `POST /apis/default/api/patient`.
+
+- [x] Identificar endpoint real para crear encounter.
+  - Identificado: `POST /apis/default/api/patient/{puuid}/encounter`.
+
+- [x] Identificar si necesitamos consultar usuarios/profesionales/facility.
+  - Scopes objetivo documentados: `user/practitioner.read`, `user/facility.read`, `user/user.read`.
+
+- [x] Guardar notas de endpoints verificados en `docs/openemr_api_notes.md`.
 
 ---
 
 ## Fase 4 - Autenticación OpenEMR desde Flask
 
-- [ ] Definir método OAuth2 correcto para la instalación real.
-- [ ] Crear cliente API si corresponde.
-- [ ] Guardar credenciales solo en `.env` local.
+- [x] Definir método OAuth2 correcto para la instalación real.
+  - Confirmado: OAuth2 funcional por HTTPS con cliente Standard API.
+
+- [x] Crear cliente API si corresponde.
+  - Confirmado: cliente `OpenEMR Kiosk Flask Standard API` creado y habilitado.
+
+- [x] Guardar credenciales solo en `.env` local.
+  - Criterio definido: no guardar `client_id`, `client_secret`, tokens ni claves reales en GitHub.
+
 - [ ] Implementar `services/openemr_service.py` con token Bearer.
-- [ ] Probar llamada simple autenticada sin crear datos.
+
+- [x] Probar llamada simple autenticada sin crear datos.
+  - Confirmado: `GET /apis/default/api/patient` respondió correctamente.
+
 - [ ] Manejar expiración/renovación de token.
 
 ---
 
 ## Fase 5 - Validaciones antes de OpenEMR
 
-- [ ] Validar nombres y apellidos obligatorios.
-- [ ] Validar fecha de nacimiento y edad coherente.
-- [ ] Validar CI/documento si se solicita.
-- [ ] Validar teléfono boliviano o formato aceptado por el centro.
-- [ ] Validar motivo de consulta no vacío.
-- [ ] Validar datos de tutor si es menor de edad.
-- [ ] Implementar normalización sin sobrescribir la respuesta original del paciente.
-- [ ] Crear resumen final obligatorio antes de guardar.
+- [x] Validar nombres y apellidos obligatorios.
+- [x] Validar fecha de nacimiento y edad coherente.
+- [x] Validar CI/documento si se solicita.
+- [x] Validar teléfono boliviano o formato aceptado por el centro.
+- [x] Validar motivo de consulta no vacío.
+- [x] Validar datos de tutor si es menor de edad.
+- [~] Implementar normalización sin sobrescribir la respuesta original del paciente.
+  - Hay normalización implementada, pero falta decidir si se conservará también la respuesta original cruda.
+- [x] Crear resumen final obligatorio antes de guardar.
 
 ---
 
@@ -175,25 +207,45 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 ## Fase 7 - Flujo paciente nuevo
 
-- [ ] Pedir datos uno por uno o mediante formulario guiado.
+- [x] Pedir datos uno por uno o mediante formulario guiado.
+  - Implementado por formulario `/nuevo`.
+
 - [ ] Buscar duplicados antes de crear.
-- [ ] Mostrar resumen final.
+
+- [x] Mostrar resumen final.
+  - Implementado en `/confirmar`.
+
 - [ ] Crear paciente en OpenEMR solo tras confirmación.
-- [ ] Registrar resultado en logs.
-- [ ] Mostrar pantalla final.
+  - Todavía no implementado; actualmente guarda intake local.
+
+- [x] Registrar resultado en logs.
+  - Confirmado: eventos `pending_confirmation` y `patient_intake_created`.
+
+- [x] Mostrar pantalla final.
+  - Implementado en `/exito`.
+
 - [ ] Definir si también se crea encounter luego del paciente nuevo.
 
 ---
 
 ## Fase 8 - Flujo paciente antiguo
 
-- [ ] Pedir CI/documento o teléfono.
+- [x] Pedir CI/documento o teléfono.
+  - Implementado como búsqueda por nombre o teléfono en `/antiguo`.
+
 - [ ] Buscar paciente en OpenEMR.
-- [ ] Mostrar confirmación básica de identidad.
-- [ ] Pedir motivo/tipo de consulta.
+
+- [~] Mostrar confirmación básica de identidad.
+  - Existe `/confirmar-antiguo`, pero todavía no confirma contra un paciente real encontrado en OpenEMR.
+
+- [x] Pedir motivo/tipo de consulta.
+
 - [ ] Crear encounter para la fecha actual.
-- [ ] Registrar resultado en logs.
-- [ ] Mostrar pantalla final.
+
+- [x] Registrar resultado en logs.
+  - Confirmado: eventos de validación y confirmación local.
+
+- [x] Mostrar pantalla final.
 
 ---
 
@@ -237,13 +289,21 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
    - Confirmado en GitHub: Flask, python-dotenv, requests, google-genai.
 2. [x] Crear rutas `/nuevo` y `/antiguo`.
    - Rutas y templates base creados; falta POST/validación.
-3. [ ] Crear pantalla `/confirmar`.
-   - Resumen antes de cualquier acción.
-4. [ ] Crear logs locales simples.
-   - SQLite o archivo log, según decisión.
-5. [ ] Luego Swagger/OpenEMR API.
-   - Recién después se implementa `services/openemr_service.py`.
+3. [x] Crear pantalla `/confirmar`.
+   - Confirmado: `/confirmar` y `/confirmar-antiguo` implementados.
 
+4. [x] Crear logs locales simples.
+   - Confirmado: SQLite con `patient_intake` y `kiosk_events`.
+
+5. [x] Luego Swagger/OpenEMR API.
+   - Confirmado: Swagger, HTTPS, OAuth2 y `GET /api/patient`.
+
+6. [ ] Implementar `services/openemr_service.py`.
+   - Siguiente paso real: consumir OpenEMR desde Flask con Bearer token.
+
+7. [ ] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
+
+8. [ ] Conectar flujo de paciente nuevo a creación real en OpenEMR.
 ---
 
 # Comandos útiles actuales
