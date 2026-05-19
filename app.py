@@ -13,6 +13,7 @@ from flask import (
 
 from config import Config
 from services.gemini_service import GeminiService
+from services.openemr_service import OpenEMRService, OpenEMRServiceError
 from services.db_service import (
     init_db,
     create_patient_intake,
@@ -247,7 +248,26 @@ def create_app():
             }), 500
 
     return app
+    
+    @app.route("/health/openemr")
+    @admin_auth_required
+    def health_openemr():
+        try:
+            openemr = OpenEMRService()
+            result = openemr.health_check()
 
+            return jsonify({
+                "status": "ok",
+                "service": "openemr",
+                "result": result,
+            })
+
+        except OpenEMRServiceError as e:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
 
 app = create_app()
 

@@ -17,6 +17,14 @@ class Config:
     OPENEMR_CLIENT_SECRET = os.getenv("OPENEMR_CLIENT_SECRET")
     OPENEMR_USERNAME = os.getenv("OPENEMR_USERNAME")
     OPENEMR_PASSWORD = os.getenv("OPENEMR_PASSWORD")
+    OPENEMR_ACCESS_TOKEN = os.getenv("OPENEMR_ACCESS_TOKEN")
+    OPENEMR_REFRESH_TOKEN = os.getenv("OPENEMR_REFRESH_TOKEN")
+    OPENEMR_VERIFY_SSL = os.getenv("OPENEMR_VERIFY_SSL", "true").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
