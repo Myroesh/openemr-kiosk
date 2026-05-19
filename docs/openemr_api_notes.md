@@ -83,3 +83,39 @@ Nota:
 
 No se seleccionaron scopes `patient/*` porque el kiosko es multipaciente y backend.
 No se seleccionó `launch/patient` porque no se está lanzando desde el contexto de un paciente específico.
+
+## OAuth2 - Cliente no habilitado
+
+Durante el intercambio de código por token, Swagger llegó correctamente a:
+
+- `/swagger/oauth2-redirect.html?code=...`
+- `POST /oauth2/default/token`
+
+Pero OpenEMR respondió 401.
+
+Log relevante:
+
+`CustomAuthCodeGrant->validateClient() client returned was not enabled`
+
+Conclusión:
+
+- El cliente OAuth2 fue creado correctamente.
+- El flujo HTTPS/OAuth funciona hasta el token endpoint.
+- Falta habilitar/aprobar manualmente el cliente en `Admin → System → API Clients`.
+
+Acción requerida:
+
+- Entrar a `Admin → System → API Clients`.
+- Editar el cliente `OpenEMR Kiosk Flask Dev HTTPS`.
+- Marcarlo como enabled/approved/active.
+- Guardar.
+- Reintentar autorización desde Swagger.
+
+## Standard API - GET /api/patient confirmado
+
+Se confirmó acceso exitoso a la Standard OpenEMR API usando HTTPS + OAuth2.
+
+Endpoint probado:
+
+```text
+GET https://100.124.189.84/apis/default/api/patient
