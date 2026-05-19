@@ -99,7 +99,7 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Actualizar pantalla inicial con botones reales: `/nuevo` y `/antiguo`.
 - [x] Crear ruta `/nuevo` con formulario inicial de paciente nuevo.
 - [x] Crear ruta `/antiguo` con búsqueda por CI/documento o teléfono.
-- [x    ] Crear ruta `/confirmar` para mostrar resumen antes de guardar.
+- [x] Crear ruta `/confirmar` para mostrar resumen antes de guardar.
 - [x] Crear ruta `/exito` con mensaje final: “Registro completado, espere a ser llamado”.
 - [~] Crear diseño responsive para tablet.
   - Nota base: CSS responsive creado; falta ajustar/probar específicamente en tablet.
