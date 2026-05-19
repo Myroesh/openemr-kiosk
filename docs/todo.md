@@ -167,13 +167,11 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Guardar credenciales solo en `.env` local.
   - Criterio definido: no guardar `client_id`, `client_secret`, tokens ni claves reales en GitHub.
 
-- [ ] Implementar `services/openemr_service.py` con token Bearer.
-
 - [x] Probar llamada simple autenticada sin crear datos.
   - Confirmado: `GET /apis/default/api/patient` respondió correctamente.
 
-- [ ] Manejar expiración/renovación de token.
-
+- [~] Manejar expiración/renovación de token.
+  - Pendiente solución estable. Por ahora se usa `OPENEMR_ACCESS_TOKEN` manual desde Swagger; no usar placeholder en `OPENEMR_REFRESH_TOKEN`.
 ---
 
 ## Fase 5 - Validaciones antes de OpenEMR
@@ -298,8 +296,8 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 5. [x] Luego Swagger/OpenEMR API.
    - Confirmado: Swagger, HTTPS, OAuth2 y `GET /api/patient`.
 
-6. [ ] Implementar `services/openemr_service.py`.
-   - Siguiente paso real: consumir OpenEMR desde Flask con Bearer token.
+6. [x] Implementar `services/openemr_service.py`.
+   - Confirmado: `/health/openemr` conectado a OpenEMR y devuelve conteo de pacientes.
 
 7. [ ] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
 
