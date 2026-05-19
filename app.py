@@ -267,6 +267,41 @@ def create_app():
                 "message": str(e),
             }), 500
 
+    @app.route("/admin/openemr/patients/search")
+    @admin_auth_required
+    def admin_openemr_patient_search():
+        query = request.args.get("q", "")
+        phone = request.args.get("phone", "")
+        limit = request.args.get("limit", 10)
+
+        if not query and not phone:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": "Debe enviar al menos q o phone.",
+                "example": "/admin/openemr/patients/search?q=juan",
+            }), 400
+
+        try:
+            openemr = OpenEMRService()
+            result = openemr.search_patients(
+                query=query,
+                phone=phone,
+                limit=limit,
+            )
+
+            return jsonify({
+                "status": "ok",
+                "service": "openemr",
+                "result": result,
+            })
+
+        except OpenEMRServiceError as e:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
 
     return app
 

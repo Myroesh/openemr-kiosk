@@ -302,6 +302,7 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 7. [ ] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
 
 8. [ ] Conectar flujo de paciente nuevo a creación real en OpenEMR.
+
 ---
 
 # Comandos útiles actuales
