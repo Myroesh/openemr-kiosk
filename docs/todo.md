@@ -231,10 +231,11 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Pedir CI/documento o teléfono.
   - Implementado como búsqueda por nombre o teléfono en `/antiguo`.
 
-- [ ] Buscar paciente en OpenEMR.
+- [x] Buscar paciente en OpenEMR.
+  - Confirmado: `/antiguo` busca paciente real mediante `OpenEMRService.search_patients()`.
 
-- [~] Mostrar confirmación básica de identidad.
-  - Existe `/confirmar-antiguo`, pero todavía no confirma contra un paciente real encontrado en OpenEMR.
+- [x] Mostrar confirmación básica de identidad.
+  - Confirmado: `/confirmar-antiguo` muestra el paciente encontrado en OpenEMR antes de continuar.
 
 - [x] Pedir motivo/tipo de consulta.
 
@@ -299,9 +300,11 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 6. [x] Implementar `services/openemr_service.py`.
    - Confirmado: `/health/openemr` conectado a OpenEMR y devuelve conteo de pacientes.
 
-7. [ ] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
+7. [x] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
 
 8. [ ] Conectar flujo de paciente nuevo a creación real en OpenEMR.
+
+9. [ ] Crear encounter para paciente antiguo confirmado.
 
 ---
 
