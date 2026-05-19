@@ -10,18 +10,47 @@
   <main class="page">
     <section class="card">
       <div class="brand">
-        <h1>Confirmar datos</h1>
-        <p>Revise la información antes de continuar.</p>
+        <h1>Confirmar paciente</h1>
+        <p>Revise que el paciente encontrado sea correcto antes de continuar.</p>
       </div>
+
+      {% if data.openemr_patient %}
+        <div class="summary">
+          <div class="summary-row">
+            <span>Paciente encontrado en OpenEMR</span>
+            <strong>
+              {{ data.openemr_patient.fname or "" }}
+              {{ data.openemr_patient.lname or "" }}
+            </strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Fecha de nacimiento</span>
+            <strong>{{ data.openemr_patient.DOB or "No registrada" }}</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Teléfono registrado</span>
+            <strong>
+              {{ data.openemr_patient.phone_cell or data.openemr_patient.phone_contact or "No registrado" }}
+            </strong>
+          </div>
+
+          <div class="summary-row">
+            <span>ID interno</span>
+            <strong>{{ data.openemr_patient.pid or "No registrado" }}</strong>
+          </div>
+        </div>
+      {% endif %}
 
       <div class="summary">
         <div class="summary-row">
-          <span>Nombre del paciente</span>
+          <span>Nombre ingresado</span>
           <strong>{{ data.nombre or "No registrado" }}</strong>
         </div>
 
         <div class="summary-row">
-          <span>Teléfono</span>
+          <span>Teléfono ingresado</span>
           <strong>{{ data.telefono or "No registrado" }}</strong>
         </div>
 
@@ -37,7 +66,7 @@
       </div>
 
       <form method="post" action="/confirmar-antiguo" class="actions">
-        <button class="btn" type="submit">Confirmar y continuar</button>
+        <button class="btn" type="submit">Confirmar paciente</button>
         <a class="btn btn-secondary" href="/antiguo">Corregir datos</a>
       </form>
     </section>

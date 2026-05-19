@@ -136,16 +136,100 @@ def create_app():
                     professionals=Config.PROFESSIONALS,
                 )
 
+            try:
+                openemr = OpenEMRService()
+                search_result = openemr.search_patients(
+                    query=data.get("nombre"),
+                    phone=data.get("telefono"),
+                    limit=5,
+                )
+
+            except OpenEMRServiceError as e:
+                create_kiosk_event(
+                    event_type="openemr_search_error",
+                    flow_type="antiguo",
+                    status="error",
+                    message="Error al buscar paciente antiguo en OpenEMR",
+                    metadata={
+                        "error": str(e),
+                        "nombre_present": bool(data.get("nombre")),
+                        "telefono_present": bool(data.get("telefono")),
+                    },
+                )
+
+                return render_template(
+                    "antiguo.html",
+                    errors=[
+                        "No se pudo consultar OpenEMR en este momento. Avise a recepción."
+                    ],
+                    form=data,
+                    professionals=Config.PROFESSIONALS,
+                )
+
+            matches = search_result.get("patients", [])
+            matched_count = search_result.get("matched_count", 0)
+
+            if matched_count == 0:
+                create_kiosk_event(
+                    event_type="existing_patient_not_found",
+                    flow_type="antiguo",
+                    status="not_found",
+                    message="No se encontró paciente antiguo en OpenEMR",
+                    metadata={
+                        "nombre_present": bool(data.get("nombre")),
+                        "telefono_present": bool(data.get("telefono")),
+                    },
+                )
+
+                return render_template(
+                    "antiguo.html",
+                    errors=[
+                        "No encontramos un paciente registrado con esos datos. Revise el nombre/teléfono o pida ayuda en recepción."
+                    ],
+                    form=data,
+                    professionals=Config.PROFESSIONALS,
+                )
+
+            if matched_count > 1:
+                create_kiosk_event(
+                    event_type="existing_patient_multiple_matches",
+                    flow_type="antiguo",
+                    status="multiple_matches",
+                    message="La búsqueda devolvió múltiples pacientes posibles",
+                    metadata={
+                        "matched_count": matched_count,
+                        "nombre_present": bool(data.get("nombre")),
+                        "telefono_present": bool(data.get("telefono")),
+                    },
+                )
+
+                return render_template(
+                    "antiguo.html",
+                    errors=[
+                        "Encontramos más de un paciente posible. Por seguridad, pida ayuda en recepción."
+                    ],
+                    form=data,
+                    professionals=Config.PROFESSIONALS,
+                )
+
+            matched_patient = matches[0]
+
+            data["openemr_patient"] = matched_patient
+            data["openemr_pid"] = matched_patient.get("pid")
+            data["openemr_uuid"] = matched_patient.get("uuid")
+            data["openemr_pubpid"] = matched_patient.get("pubpid")
+
             session["pending_existing"] = data
 
             create_kiosk_event(
-                event_type="pending_confirmation",
+                event_type="existing_patient_found_pending_confirmation",
                 flow_type="antiguo",
                 status="ok",
-                message="Datos de paciente antiguo capturados, normalizados y pendientes de confirmación final",
+                message="Paciente antiguo encontrado en OpenEMR y pendiente de confirmación final",
                 metadata={
-                    "nombre_present": bool(data.get("nombre")),
-                    "telefono_present": bool(data.get("telefono")),
+                    "openemr_pid_present": bool(data.get("openemr_pid")),
+                    "openemr_uuid_present": bool(data.get("openemr_uuid")),
+                    "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
                     "profesional_area": data.get("profesional_area"),
                     "motivo_consulta_present": bool(data.get("motivo_consulta")),
                 },
@@ -184,13 +268,14 @@ def create_app():
 
         if request.method == "POST":
             create_kiosk_event(
-                event_type="existing_patient_search_confirmed",
+                event_type="existing_patient_confirmed",
                 flow_type="antiguo",
-                status="pending_openemr",
-                message="Paciente antiguo confirmado localmente; pendiente búsqueda/encounter en OpenEMR",
+                status="pending_encounter",
+                message="Paciente antiguo confirmado contra OpenEMR; pendiente crear encounter",
                 metadata={
-                    "nombre_present": bool(data.get("nombre")),
-                    "telefono_present": bool(data.get("telefono")),
+                    "openemr_pid_present": bool(data.get("openemr_pid")),
+                    "openemr_uuid_present": bool(data.get("openemr_uuid")),
+                    "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
                     "profesional_area": data.get("profesional_area"),
                     "motivo_consulta_present": bool(data.get("motivo_consulta")),
                 },
