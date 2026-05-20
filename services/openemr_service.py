@@ -15,18 +15,19 @@ class OpenEMRConfigError(OpenEMRServiceError):
 
 
 class OpenEMRService:
-    """
+     """
     Servicio mínimo para consumir la Standard API de OpenEMR desde Flask.
 
     Bloque actual:
     - Obtener/usar Bearer token.
     - Probar lectura segura de pacientes.
     - Buscar pacientes de forma segura.
-    - No crear pacientes.
-    - No crear encounters.
+    - Leer encounters de pacientes.
+    - Crear encounters para pacientes confirmados.
+    - No crear pacientes todavía.
     """
 
-    def __init__(self):
+def __init__(self):
         self.base_url = self._clean_base_url(Config.OPENEMR_BASE_URL)
         self.site = Config.OPENEMR_SITE or "default"
         self.client_id = self._clean_optional_secret(Config.OPENEMR_CLIENT_ID)
@@ -40,7 +41,7 @@ class OpenEMRService:
         if not self.base_url:
             raise OpenEMRConfigError("OPENEMR_BASE_URL no está configurado.")
 
-    @staticmethod
+@staticmethod
     def _clean_base_url(value):
         if not value:
             return ""

@@ -26,8 +26,8 @@ class Config:
         "on",
     )
     OPENEMR_DEFAULT_FACILITY = os.getenv(
-    "OPENEMR_DEFAULT_FACILITY",
-    "Centro Neuropsicologico Saavedra",
+        "OPENEMR_DEFAULT_FACILITY",
+        "Centro Neuropsicologico Saavedra",
     )
     OPENEMR_DEFAULT_PC_CATID = os.getenv("OPENEMR_DEFAULT_PC_CATID", "5")
     OPENEMR_DEFAULT_FACILITY_ID = os.getenv("OPENEMR_DEFAULT_FACILITY_ID", "3")
