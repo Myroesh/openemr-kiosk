@@ -343,23 +343,51 @@ def create_app():
                     )
 
                 patient_payload = openemr.build_kiosk_patient_payload(data)
-                result = openemr.create_patient(patient_payload)
+                patient_result = openemr.create_patient(patient_payload)
 
-                result_data = result.get("data", {}) if isinstance(result, dict) else {}
-                openemr_patient_id = result_data.get("pid")
-                openemr_patient_uuid = result_data.get("uuid")
+                patient_result_data = (
+                    patient_result.get("data", {})
+                    if isinstance(patient_result, dict)
+                    else {}
+                )
+                openemr_patient_id = patient_result_data.get("pid")
+                openemr_patient_uuid = patient_result_data.get("uuid")
+
+                if not openemr_patient_uuid:
+                    raise OpenEMRServiceError(
+                        "OpenEMR creó el paciente, pero no devolvió uuid para crear encounter."
+                    )
+
+                encounter_payload = openemr.build_kiosk_encounter_payload(
+                    motivo_consulta=data.get("motivo_consulta"),
+                )
+
+                encounter_result = openemr.create_encounter_for_patient(
+                    patient_uuid=openemr_patient_uuid,
+                    encounter_data=encounter_payload,
+                )
+
+                encounter_result_data = (
+                    encounter_result.get("data", {})
+                    if isinstance(encounter_result, dict)
+                    else {}
+                )
+                openemr_encounter_id = encounter_result_data.get("encounter")
+                openemr_encounter_uuid = encounter_result_data.get("uuid")
 
                 intake_id = create_patient_intake(data)
 
                 create_kiosk_event(
-                    event_type="new_patient_created_in_openemr",
+                    event_type="new_patient_created_with_encounter",
                     flow_type="nuevo",
                     status="ok",
-                    message="Paciente nuevo creado en OpenEMR después de confirmación final",
+                    message="Paciente nuevo y encounter inicial creados en OpenEMR después de confirmación final",
                     intake_id=intake_id,
                     metadata={
                         "openemr_patient_id": openemr_patient_id,
                         "openemr_patient_uuid_present": bool(openemr_patient_uuid),
+                        "openemr_encounter_id": openemr_encounter_id,
+                        "openemr_encounter_uuid_present": bool(openemr_encounter_uuid),
                         "ci_documento_present": bool(data.get("ci_documento")),
                         "telefono_present": bool(data.get("telefono")),
                         "sexo_present": bool(data.get("sexo")),
@@ -377,7 +405,7 @@ def create_app():
                     event_type="new_patient_openemr_create_error",
                     flow_type="nuevo",
                     status="error",
-                    message="Error al crear paciente nuevo en OpenEMR después de confirmación final",
+                    message="Error al crear paciente nuevo o encounter inicial en OpenEMR después de confirmación final",
                     metadata={
                         "error": str(e),
                         "ci_documento_present": bool(data.get("ci_documento")),
@@ -390,7 +418,7 @@ def create_app():
                     "confirmar.html",
                     data=data,
                     errors=[
-                        "No se pudo crear el paciente en OpenEMR. Avise a recepción."
+                        "No se pudo completar el registro del paciente en OpenEMR. Avise a recepción."
                     ],
                 )
 
