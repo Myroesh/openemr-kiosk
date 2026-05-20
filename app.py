@@ -310,12 +310,91 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
-            intake_id = create_patient_intake(data)
-            session.pop("pending_intake", None)
+            try:
+                openemr = OpenEMRService()
 
-            return redirect(url_for("exito", intake_id=intake_id))
+                duplicate_result = openemr.search_patients(
+                    query=f"{data.get('nombres', '')} {data.get('apellidos', '')}",
+                    phone=data.get("telefono"),
+                    limit=5,
+                )
 
-        return render_template("confirmar.html", data=data)
+                duplicate_count = duplicate_result.get("matched_count", 0)
+
+                if duplicate_count > 0:
+                    create_kiosk_event(
+                        event_type="new_patient_duplicate_found_on_confirmation",
+                        flow_type="nuevo",
+                        status="blocked",
+                        message="Posible duplicado detectado al confirmar creación de paciente nuevo",
+                        metadata={
+                            "duplicate_count": duplicate_count,
+                            "ci_documento_present": bool(data.get("ci_documento")),
+                            "telefono_present": bool(data.get("telefono")),
+                        },
+                    )
+
+                    return render_template(
+                        "confirmar.html",
+                        data=data,
+                        errors=[
+                            "Antes de guardar, encontramos un paciente registrado con datos similares. Por seguridad, pida ayuda en recepción."
+                        ],
+                    )
+
+                patient_payload = openemr.build_kiosk_patient_payload(data)
+                result = openemr.create_patient(patient_payload)
+
+                result_data = result.get("data", {}) if isinstance(result, dict) else {}
+                openemr_patient_id = result_data.get("pid")
+                openemr_patient_uuid = result_data.get("uuid")
+
+                intake_id = create_patient_intake(data)
+
+                create_kiosk_event(
+                    event_type="new_patient_created_in_openemr",
+                    flow_type="nuevo",
+                    status="ok",
+                    message="Paciente nuevo creado en OpenEMR después de confirmación final",
+                    intake_id=intake_id,
+                    metadata={
+                        "openemr_patient_id": openemr_patient_id,
+                        "openemr_patient_uuid_present": bool(openemr_patient_uuid),
+                        "ci_documento_present": bool(data.get("ci_documento")),
+                        "telefono_present": bool(data.get("telefono")),
+                        "sexo_present": bool(data.get("sexo")),
+                        "profesional_area": data.get("profesional_area"),
+                        "motivo_consulta_present": bool(data.get("motivo_consulta")),
+                    },
+                )
+
+                session.pop("pending_intake", None)
+
+                return redirect(url_for("exito", intake_id=intake_id))
+
+            except OpenEMRServiceError as e:
+                create_kiosk_event(
+                    event_type="new_patient_openemr_create_error",
+                    flow_type="nuevo",
+                    status="error",
+                    message="Error al crear paciente nuevo en OpenEMR después de confirmación final",
+                    metadata={
+                        "error": str(e),
+                        "ci_documento_present": bool(data.get("ci_documento")),
+                        "telefono_present": bool(data.get("telefono")),
+                        "sexo_present": bool(data.get("sexo")),
+                    },
+                )
+
+                return render_template(
+                    "confirmar.html",
+                    data=data,
+                    errors=[
+                        "No se pudo crear el paciente en OpenEMR. Avise a recepción."
+                    ],
+                )
+
+        return render_template("confirmar.html", data=data, errors=[])
 
     @app.route("/confirmar-antiguo", methods=["GET", "POST"])
     def confirmar_antiguo():

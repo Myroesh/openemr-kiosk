@@ -13,7 +13,13 @@
         <h1>Confirmar datos</h1>
         <p>Revise la información antes de guardar.</p>
       </div>
-
+      {% if errors %}
+        <div class="alert">
+          {% for error in errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
       <div class="summary">
         <div class="summary-row">
           <span>Nombre</span>
@@ -109,7 +115,7 @@
       </div>
 
       <form method="post" action="/confirmar" class="actions">
-        <button class="btn" type="submit">Confirmar y guardar</button>
+        <button class="btn" type="submit">Confirmar y crear paciente</button>
         <a class="btn btn-secondary" href="/nuevo">Corregir datos</a>
       </form>
     </section>
