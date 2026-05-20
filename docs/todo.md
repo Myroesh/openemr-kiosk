@@ -214,8 +214,8 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Mostrar resumen final.
   - Implementado en `/confirmar`.
 
-- [ ] Crear paciente en OpenEMR solo tras confirmación.
-  - Todavía no implementado; actualmente guarda intake local.
+- [x] Crear paciente en OpenEMR solo tras confirmación.
+  - Confirmado: `/confirmar` crea paciente real en OpenEMR usando `OpenEMRService.create_patient()` después de la confirmación final.
 
 - [x] Registrar resultado en logs.
   - Confirmado: eventos `pending_confirmation` y `patient_intake_created`.
@@ -311,9 +311,9 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 7. [x] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
 
-8. [~] Conectar flujo de paciente nuevo a creación real en OpenEMR.
+8. [x] Conectar flujo de paciente nuevo a creación real en OpenEMR.
    - Confirmado: búsqueda de duplicados previa.
-   - Pendiente: crear paciente en OpenEMR solo tras confirmación.
+   - Confirmado: creación real de paciente en OpenEMR después de confirmación.
 
 9. [x] Crear encounter para paciente antiguo confirmado.
    - Confirmado: `/confirmar-antiguo` crea encounter real en OpenEMR usando `create_encounter_for_patient()`.
