@@ -85,6 +85,64 @@ def create_app():
                     form=data,
                     professionals=Config.PROFESSIONALS,
                 )
+            
+
+            try:
+                openemr = OpenEMRService()
+                duplicate_result = openemr.search_patients(
+                    query=f"{data.get('nombres', '')} {data.get('apellidos', '')}",
+                    phone=data.get("telefono"),
+                    limit=5,
+                )
+
+            except OpenEMRServiceError as e:
+                create_kiosk_event(
+                    event_type="openemr_duplicate_search_error",
+                    flow_type="nuevo",
+                    status="error",
+                    message="Error al buscar duplicados en OpenEMR antes de crear paciente nuevo",
+                    metadata={
+                        "error": str(e),
+                        "ci_documento_present": bool(data.get("ci_documento")),
+                        "telefono_present": bool(data.get("telefono")),
+                    },
+                )
+
+                return render_template(
+                    "nuevo.html",
+                    errors=[
+                        "No se pudo verificar si el paciente ya existe. Avise a recepción."
+                    ],
+                    form=data,
+                    professionals=Config.PROFESSIONALS,
+                )
+
+            duplicate_matches = duplicate_result.get("patients", [])
+            duplicate_count = duplicate_result.get("matched_count", 0)
+
+            if duplicate_count > 0:
+                create_kiosk_event(
+                    event_type="new_patient_possible_duplicate",
+                    flow_type="nuevo",
+                    status="blocked",
+                    message="Posible paciente duplicado detectado antes de crear paciente nuevo",
+                    metadata={
+                        "duplicate_count": duplicate_count,
+                        "ci_documento_present": bool(data.get("ci_documento")),
+                        "telefono_present": bool(data.get("telefono")),
+                    },
+                )
+
+                return render_template(
+                    "nuevo.html",
+                    errors=[
+                        "Encontramos un paciente registrado con datos similares. Por seguridad, pida ayuda en recepción."
+                    ],
+                    form=data,
+                    professionals=Config.PROFESSIONALS,
+                )
+
+
 
             session["pending_intake"] = data
 
