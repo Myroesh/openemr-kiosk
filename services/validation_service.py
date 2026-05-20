@@ -1,6 +1,13 @@
 import re
 from datetime import date, datetime
 
+ALLOWED_CONSULTATION_REASONS = (
+    "Consulta Inicial",
+    "Sesión",
+    "Revisión de resultados",
+    "Test",
+    "Entrevista con los padres",
+)
 
 def clean_spaces(value):
     if value is None:
@@ -194,6 +201,8 @@ def validate_new_patient_data(raw_data, professionals):
 
     if not data["motivo_consulta"]:
         errors.append("El motivo de consulta es obligatorio.")
+    elif data["motivo_consulta"] not in ALLOWED_CONSULTATION_REASONS:
+        errors.append("El motivo de consulta seleccionado no es válido.")
 
     if not data["profesional_area"]:
         errors.append("Debe seleccionar un profesional.")
@@ -255,6 +264,8 @@ def validate_existing_patient_data(raw_data, professionals):
         errors.append("El profesional seleccionado no es válido.")
 
     if not data["motivo_consulta"]:
-        errors.append("Debe ingresar el motivo de consulta.")
+        errors.append("Debe seleccionar el motivo de consulta.")
+    elif data["motivo_consulta"] not in ALLOWED_CONSULTATION_REASONS:
+        errors.append("El motivo de consulta seleccionado no es válido.")
 
     return data, errors

@@ -40,7 +40,23 @@
         </select>
 
         <label>Motivo de consulta</label>
-        <textarea name="motivo_consulta" required>{{ form.motivo_consulta or '' }}</textarea>
+        <select name="motivo_consulta" required>
+          <option value="Consulta Inicial" {% if form.motivo_consulta == "Consulta Inicial" %}selected{% endif %}>
+            Consulta Inicial
+          </option>
+          <option value="Sesión" {% if form.motivo_consulta == "Sesión" or not form.motivo_consulta %}selected{% endif %}>
+            Sesión
+          </option>
+          <option value="Revisión de resultados" {% if form.motivo_consulta == "Revisión de resultados" %}selected{% endif %}>
+            Revisión de resultados
+          </option>
+          <option value="Test" {% if form.motivo_consulta == "Test" %}selected{% endif %}>
+            Test
+          </option>
+          <option value="Entrevista con los padres" {% if form.motivo_consulta == "Entrevista con los padres" %}selected{% endif %}>
+            Entrevista con los padres
+          </option>
+        </select>
 
         <div class="actions">
           <button class="btn" type="submit">Continuar</button>
