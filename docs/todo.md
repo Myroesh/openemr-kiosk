@@ -208,7 +208,8 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Pedir datos uno por uno o mediante formulario guiado.
   - Implementado por formulario `/nuevo`.
 
-- [ ] Buscar duplicados antes de crear.
+- [x] Buscar duplicados antes de crear.
+  - Confirmado: `/nuevo` consulta OpenEMR con `OpenEMRService.search_patients()` antes de permitir confirmación.
 
 - [x] Mostrar resumen final.
   - Implementado en `/confirmar`.
@@ -310,7 +311,9 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 7. [x] Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
 
-8. [ ] Conectar flujo de paciente nuevo a creación real en OpenEMR.
+8. [~] Conectar flujo de paciente nuevo a creación real en OpenEMR.
+   - Confirmado: búsqueda de duplicados previa.
+   - Pendiente: crear paciente en OpenEMR solo tras confirmación.
 
 9. [x] Crear encounter para paciente antiguo confirmado.
    - Confirmado: `/confirmar-antiguo` crea encounter real en OpenEMR usando `create_encounter_for_patient()`.
