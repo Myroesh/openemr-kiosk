@@ -190,17 +190,29 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 ## Fase 6 - Integración Gemini Flash controlada
 
-- [x] Configurar `GEMINI_API_KEY` en `.env` local.
-  - Nota base: `.env` ignorado por Git.
-- [x] Implementar `services/gemini_service.py`.
-  - Nota base: implementado con `google-genai` y prueba de conexión.
 - [ ] Definir prompts estrictos para extraer solo el campo actual.
-- [ ] Hacer que Gemini devuelva JSON estructurado o resultado controlado.
-- [ ] Agregar fallback si Gemini falla: formulario manual.
-- [~] Evitar que Gemini cree acciones directas en OpenEMR.
-  - Nota base: por arquitectura Gemini no tiene acceso a OpenEMR; falta reforzarlo en prompts/servicios.
-- [ ] Registrar errores de IA sin exponer datos sensibles.
+  - Pendiente: Gemini debe limitarse a ayudar en captura/clasificación de datos, no decidir acciones clínicas ni escribir directamente en OpenEMR.
 
+- [ ] Hacer que Gemini devuelva JSON estructurado o resultado controlado.
+  - Pendiente: las respuestas deben mapearse a campos conocidos del formulario.
+
+- [ ] Limitar `motivo_consulta` a catálogo cerrado también cuando se use Gemini.
+  - Catálogo confirmado:
+    - Consulta Inicial
+    - Sesión
+    - Revisión de resultados
+    - Test
+    - Entrevista con los padres
+  - Regla: si Gemini no está seguro, usar fallback a selector manual o valor por defecto `Sesión`.
+
+- [ ] Agregar fallback si Gemini falla: formulario manual.
+  - El formulario manual ya funciona como camino seguro; falta integrarlo como fallback formal del flujo conversacional.
+
+- [~] Evitar que Gemini cree acciones directas en OpenEMR.
+  - Nota base: por arquitectura Gemini no tiene acceso directo a OpenEMR.
+  - Pendiente: reforzar en prompts/servicios que Gemini solo propone datos estructurados; Flask valida y ejecuta.
+
+- [ ] Registrar errores de IA sin exponer datos sensibles.
 ---
 
 ## Fase 7 - Flujo paciente nuevo
@@ -227,6 +239,10 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
   - Decisión: el kiosko actúa como recepción, por lo tanto crea encounter inicial después de registrar al paciente nuevo.
   - Confirmado: `/confirmar` crea paciente nuevo y luego encounter inicial en OpenEMR.
 
+- [x] Usar catálogo cerrado para motivo de consulta.
+  - Confirmado: `/nuevo` usa dropdown en lugar de texto libre.
+  - Valor por defecto: `Sesión`.
+  - Backend valida contra catálogo permitido.
 ---
 
 ## Fase 8 - Flujo paciente antiguo
@@ -240,7 +256,10 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Mostrar confirmación básica de identidad.
   - Confirmado: `/confirmar-antiguo` muestra el paciente encontrado en OpenEMR antes de continuar.
 
-- [x] Pedir motivo/tipo de consulta.
+- [x] Usar catálogo cerrado para motivo de consulta.
+  - Confirmado: `/antiguo` usa dropdown en lugar de texto libre.
+  - Valor por defecto: `Sesión`.
+  - Backend valida contra catálogo permitido
 
 - [x] Crear encounter para la fecha actual.
   - Confirmado: `/confirmar-antiguo` crea encounter en OpenEMR después de confirmar paciente antiguo.
@@ -261,14 +280,24 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 ## Fase 9 - Pruebas y control de errores
 
-- [ ] Probar paciente nuevo con datos válidos.
-- [ ] Probar paciente nuevo con datos incompletos.
-- [ ] Probar duplicado por CI/documento.
-- [ ] Probar paciente antiguo no encontrado.
-- [ ] Probar error de OpenEMR API.
-- [ ] Probar error de Gemini o timeout.
-- [ ] Confirmar que no se crean datos sin confirmación.
+- [x] Probar paciente nuevo con datos válidos.
+  - Confirmado: paciente nuevo se crea en OpenEMR y se crea encounter inicial.
 
+- [ ] Probar paciente nuevo con datos incompletos.
+
+- [x] Probar duplicado por datos similares.
+  - Confirmado: el flujo bloquea creación si encuentra paciente registrado con datos similares.
+
+- [x] Probar paciente antiguo no encontrado.
+  - Confirmado previamente: muestra mensaje y pide ayuda en recepción.
+
+- [x] Probar error de OpenEMR API.
+  - Confirmado previamente con token vencido: el flujo bloquea avance y muestra error seguro.
+
+- [ ] Probar error de Gemini o timeout.
+
+- [x] Confirmar que no se crean datos sin confirmación.
+  - Confirmado: creación de paciente y encounters ocurre después de pantalla de confirmación.
 ---
 
 ## Fase 10 - Despliegue local estable
@@ -316,9 +345,19 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 8. [x] Conectar flujo de paciente nuevo a creación real en OpenEMR.
    - Confirmado: búsqueda de duplicados previa.
    - Confirmado: creación real de paciente en OpenEMR después de confirmación.
+   - Confirmado: creación de encounter inicial después de crear paciente nuevo.
 
 9. [x] Crear encounter para paciente antiguo confirmado.
    - Confirmado: `/confirmar-antiguo` crea encounter real en OpenEMR usando `create_encounter_for_patient()`.
+
+10. [x] Limitar motivo de consulta a catálogo cerrado.
+   - Confirmado en flujo nuevo y antiguo.
+   - Opciones: Consulta Inicial, Sesión, Revisión de resultados, Test, Entrevista con los padres.
+   - Valor por defecto: Sesión.
+
+11. [ ] Formalizar integración Gemini controlada.
+   - Gemini debe clasificar o asistir la captura, pero solo dentro de campos y catálogos permitidos.
+   - Fallback obligatorio: formulario manual.
 
 ---
 
