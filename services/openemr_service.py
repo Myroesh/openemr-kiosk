@@ -1,6 +1,7 @@
 import re
-import requests
+from urllib.parse import quote
 
+import requests
 from config import Config
 
 
@@ -363,6 +364,54 @@ class OpenEMRService:
             "matched_count": len(matches),
             "patients": matches,
         }
+    def get_patient_encounters(self, patient_uuid):
+        """
+        Lectura segura de encounters de un paciente.
+
+        Endpoint confirmado en notas:
+        GET /apis/default/api/patient/{puuid}/encounter
+        """
+
+        patient_uuid = self._clean_optional_secret(patient_uuid)
+
+        if not patient_uuid:
+            raise OpenEMRConfigError("patient_uuid/puuid es obligatorio.")
+
+        safe_patient_uuid = quote(patient_uuid, safe="")
+
+        return self._request(
+            "GET",
+            f"/patient/{safe_patient_uuid}/encounter",
+        )
+
+    def create_encounter_for_patient(self, patient_uuid, encounter_data):
+        """
+        Crea encounter para un paciente existente.
+
+        Importante:
+        - Este método NO inventa payload.
+        - El payload debe salir de Swagger de la instalación real.
+        - Usar primero con paciente de prueba/controlado.
+        """
+
+        patient_uuid = self._clean_optional_secret(patient_uuid)
+
+        if not patient_uuid:
+            raise OpenEMRConfigError("patient_uuid/puuid es obligatorio.")
+
+        if not isinstance(encounter_data, dict):
+            raise OpenEMRConfigError("encounter_data debe ser un objeto JSON.")
+
+        if not encounter_data:
+            raise OpenEMRConfigError("encounter_data no puede estar vacío.")
+
+        safe_patient_uuid = quote(patient_uuid, safe="")
+
+        return self._request(
+            "POST",
+            f"/patient/{safe_patient_uuid}/encounter",
+            json=encounter_data,
+        )
 
     def health_check(self):
         """

@@ -112,6 +112,8 @@ def create_app():
             professionals=Config.PROFESSIONALS,
         )
 
+
+
     @app.route("/antiguo", methods=["GET", "POST"])
     def antiguo():
         if request.method == "POST":
@@ -331,7 +333,32 @@ def create_app():
                 "service": "gemini",
                 "message": str(e),
             }), 500
+    @app.route("/admin/openemr/patients/<path:patient_uuid>/encounters")
+    @admin_auth_required
+    def admin_openemr_patient_encounters(patient_uuid):
+        try:
+            openemr = OpenEMRService()
+            result = openemr.get_patient_encounters(patient_uuid)
 
+            data = result.get("data", [])
+
+            return jsonify({
+                "status": "ok",
+                "service": "openemr",
+                "result": {
+                    "patient_uuid": patient_uuid,
+                    "encounters_count": len(data) if isinstance(data, list) else None,
+                    "raw": result,
+                },
+            })
+
+        except OpenEMRServiceError as e:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
+            
     @app.route("/health/openemr")
     @admin_auth_required
     def health_openemr():
