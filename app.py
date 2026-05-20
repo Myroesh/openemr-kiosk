@@ -379,6 +379,65 @@ def create_app():
                 "message": str(e),
             }), 500
 
+    @app.route("/admin/openemr/patients/<path:patient_uuid>/encounter/test", methods=["POST"])
+    @admin_auth_required
+    def admin_openemr_create_encounter_test(patient_uuid):
+        encounter_data = request.get_json(silent=True) or {}
+
+        if request.args.get("confirm") != "CREATE":
+            return jsonify({
+                "status": "dry_run",
+                "service": "openemr",
+                "message": "No se creó ningún encounter. Para ejecutar, agregue ?confirm=CREATE.",
+                "patient_uuid": patient_uuid,
+                "payload_received": encounter_data,
+            })
+
+        try:
+            openemr = OpenEMRService()
+            result = openemr.create_encounter_for_patient(
+                patient_uuid=patient_uuid,
+                encounter_data=encounter_data,
+            )
+
+            create_kiosk_event(
+                event_type="admin_test_encounter_created",
+                flow_type="antiguo",
+                status="ok",
+                message="Encounter creado desde ruta admin de prueba",
+                metadata={
+                    "patient_uuid_present": bool(patient_uuid),
+                    "response_keys": list(result.keys()) if isinstance(result, dict) else [],
+                },
+            )
+
+            return jsonify({
+                "status": "ok",
+                "service": "openemr",
+                "message": "Encounter creado en OpenEMR.",
+                "result": result,
+            })
+
+        except OpenEMRServiceError as e:
+            create_kiosk_event(
+                event_type="admin_test_encounter_error",
+                flow_type="antiguo",
+                status="error",
+                message="Error al crear encounter desde ruta admin de prueba",
+                metadata={
+                    "patient_uuid_present": bool(patient_uuid),
+                    "error": str(e),
+                },
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
+
+
+
     @app.route("/admin/openemr/patients/search")
     @admin_auth_required
     def admin_openemr_patient_search():
@@ -414,6 +473,11 @@ def create_app():
                 "service": "openemr",
                 "message": str(e),
             }), 500
+
+
+
+
+
 
     return app
 
