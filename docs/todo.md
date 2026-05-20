@@ -244,10 +244,12 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
   - Encounter de prueba creado correctamente en OpenEMR.
   - Pendiente: conectar `/confirmar-antiguo` para crear encounter automáticamente tras confirmación.  
 
-- [~] Preparar lectura/escritura controlada de encounters desde Flask.
+- [x] Preparar lectura/escritura controlada de encounters desde Flask.
   - Confirmado: `OpenEMRService.get_patient_encounters()` y `create_encounter_for_patient()` agregados.
   - Confirmado: ruta admin protegida para leer encounters por paciente agregada.
-  - Pendiente: ruta admin de prueba para crear encounter con dry-run y payload validado desde Swagger.
+  - Confirmado: ruta admin de prueba con dry-run agregada.
+  - Confirmado: payload de Swagger validado.
+  - Confirmado: encounter de prueba creado correctamente en OpenEMR.
 
 - [x] Registrar resultado en logs.
   - Confirmado: eventos de validación y confirmación local.
@@ -317,6 +319,7 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
    - Confirmado: ruta admin protegida con dry-run.
    - Confirmado: encounter creado correctamente en OpenEMR.
    - Pendiente: conectar `/confirmar-antiguo` al método `create_encounter_for_patient()`.
+   
 ---
 
 # Comandos útiles actuales
