@@ -190,29 +190,36 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 ## Fase 6 - Integración Gemini Flash controlada
 
-- [ ] Definir prompts estrictos para extraer solo el campo actual.
-  - Pendiente: Gemini debe limitarse a ayudar en captura/clasificación de datos, no decidir acciones clínicas ni escribir directamente en OpenEMR.
+- [x] Definir prompts estrictos para extraer solo el campo actual.
+  - Confirmado: `GeminiService.classify_consultation_reason()` usa prompt estricto para clasificar solo `motivo_consulta`.
+  - Gemini no escribe en OpenEMR ni decide acciones clínicas.
 
-- [ ] Hacer que Gemini devuelva JSON estructurado o resultado controlado.
-  - Pendiente: las respuestas deben mapearse a campos conocidos del formulario.
+- [x] Hacer que Gemini devuelva JSON estructurado o resultado controlado.
+  - Confirmado: la respuesta se parsea como JSON y se valida contra campos esperados.
+  - Si devuelve markdown JSON, el servicio lo limpia antes de parsear.
 
-- [ ] Limitar `motivo_consulta` a catálogo cerrado también cuando se use Gemini.
+- [x] Limitar `motivo_consulta` a catálogo cerrado también cuando se use Gemini.
+  - Confirmado: Gemini solo puede devolver valores dentro de `ALLOWED_CONSULTATION_REASONS`.
+  - Confirmado: reglas locales previas evitan gastar Gemini en frases obvias.
   - Catálogo confirmado:
     - Consulta Inicial
     - Sesión
     - Revisión de resultados
     - Test
     - Entrevista con los padres
-  - Regla: si Gemini no está seguro, usar fallback a selector manual o valor por defecto `Sesión`.
+  - Regla: si Gemini no está seguro, usar fallback a `Sesión`.
 
-- [ ] Agregar fallback si Gemini falla: formulario manual.
-  - El formulario manual ya funciona como camino seguro; falta integrarlo como fallback formal del flujo conversacional.
+- [~] Agregar fallback si Gemini falla: formulario manual.
+  - Confirmado: `classify_consultation_reason()` usa fallback seguro a `Sesión`.
+  - Pendiente: integrar fallback formal al flujo conversacional cuando exista UI conversacional.
 
-- [~] Evitar que Gemini cree acciones directas en OpenEMR.
-  - Nota base: por arquitectura Gemini no tiene acceso directo a OpenEMR.
-  - Pendiente: reforzar en prompts/servicios que Gemini solo propone datos estructurados; Flask valida y ejecuta.
+- [x] Evitar que Gemini cree acciones directas en OpenEMR.
+  - Confirmado: `GeminiService` no importa ni llama `OpenEMRService`.
+  - Gemini solo clasifica datos; Flask valida y ejecuta.
 
-- [ ] Registrar errores de IA sin exponer datos sensibles.
+- [x] Registrar errores de IA sin exponer datos sensibles.
+  - Confirmado: la ruta admin de prueba registra presencia de texto, motivo, confianza, fallback y error_present, sin guardar el texto completo.
+  
 ---
 
 ## Fase 7 - Flujo paciente nuevo
