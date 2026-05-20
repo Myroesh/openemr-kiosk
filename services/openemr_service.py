@@ -3,6 +3,7 @@ from datetime import date
 from urllib.parse import quote
 
 import requests
+
 from config import Config
 
 
@@ -15,7 +16,7 @@ class OpenEMRConfigError(OpenEMRServiceError):
 
 
 class OpenEMRService:
-     """
+    """
     Servicio mínimo para consumir la Standard API de OpenEMR desde Flask.
 
     Bloque actual:
@@ -27,7 +28,7 @@ class OpenEMRService:
     - No crear pacientes todavía.
     """
 
-def __init__(self):
+    def __init__(self):
         self.base_url = self._clean_base_url(Config.OPENEMR_BASE_URL)
         self.site = Config.OPENEMR_SITE or "default"
         self.client_id = self._clean_optional_secret(Config.OPENEMR_CLIENT_ID)
@@ -41,7 +42,7 @@ def __init__(self):
         if not self.base_url:
             raise OpenEMRConfigError("OPENEMR_BASE_URL no está configurado.")
 
-@staticmethod
+    @staticmethod
     def _clean_base_url(value):
         if not value:
             return ""
@@ -306,7 +307,7 @@ def __init__(self):
         """
         Búsqueda segura inicial de pacientes.
 
-        Por ahora NO inventamos filtros remotos de OpenEMR.
+        Por ahora no inventamos filtros remotos de OpenEMR.
         Se usa GET /patient confirmado y se filtra localmente en Flask.
 
         Esto es suficiente para el MVP actual porque la base tiene pocos pacientes.
@@ -402,7 +403,7 @@ def __init__(self):
         """
         Lectura segura de encounters de un paciente.
 
-        Endpoint confirmado en notas:
+        Endpoint confirmado:
         GET /apis/default/api/patient/{puuid}/encounter
         """
 
@@ -423,9 +424,8 @@ def __init__(self):
         Crea encounter para un paciente existente.
 
         Importante:
-        - Este método NO inventa payload.
-        - El payload debe salir de Swagger de la instalación real.
-        - Usar primero con paciente de prueba/controlado.
+        - Este método usa el payload confirmado por Swagger/OpenEMR.
+        - Usar con paciente previamente confirmado.
         """
 
         patient_uuid = self._clean_optional_secret(patient_uuid)
