@@ -574,6 +574,69 @@ def create_app():
                 "message": str(e),
             }), 500
 
+    @app.route("/admin/openemr/patient/test", methods=["POST"])
+    @admin_auth_required
+    def admin_openemr_create_patient_test():
+        raw_data = request.get_json(silent=True) or {}
+
+        try:
+            openemr = OpenEMRService()
+            patient_payload = openemr.build_kiosk_patient_payload(raw_data)
+
+        except OpenEMRServiceError as e:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 400
+
+        if request.args.get("confirm") != "CREATE":
+            return jsonify({
+                "status": "dry_run",
+                "service": "openemr",
+                "message": "No se creó ningún paciente. Para ejecutar, agregue ?confirm=CREATE.",
+                "payload_received": raw_data,
+                "payload_to_openemr": patient_payload,
+            })
+
+        try:
+            result = openemr.create_patient(patient_payload)
+
+            create_kiosk_event(
+                event_type="admin_test_patient_created",
+                flow_type="nuevo",
+                status="ok",
+                message="Paciente creado desde ruta admin de prueba",
+                metadata={
+                    "response_keys": list(result.keys()) if isinstance(result, dict) else [],
+                },
+            )
+
+            return jsonify({
+                "status": "ok",
+                "service": "openemr",
+                "message": "Paciente creado en OpenEMR.",
+                "result": result,
+            })
+
+        except OpenEMRServiceError as e:
+            create_kiosk_event(
+                event_type="admin_test_patient_error",
+                flow_type="nuevo",
+                status="error",
+                message="Error al crear paciente desde ruta admin de prueba",
+                metadata={
+                    "error": str(e),
+                },
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
+
+
     return app
 
 
