@@ -223,7 +223,9 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Mostrar pantalla final.
   - Implementado en `/exito`.
 
-- [ ] Definir si también se crea encounter luego del paciente nuevo.
+- [x] Definir si también se crea encounter luego del paciente nuevo.
+  - Decisión: el kiosko actúa como recepción, por lo tanto crea encounter inicial después de registrar al paciente nuevo.
+  - Confirmado: `/confirmar` crea paciente nuevo y luego encounter inicial en OpenEMR.
 
 ---
 
