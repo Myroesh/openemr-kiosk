@@ -112,8 +112,6 @@ def create_app():
             professionals=Config.PROFESSIONALS,
         )
 
-
-
     @app.route("/antiguo", methods=["GET", "POST"])
     def antiguo():
         if request.method == "POST":
@@ -458,7 +456,10 @@ def create_app():
                 "message": str(e),
             }), 500
 
-    @app.route("/admin/openemr/patients/<path:patient_uuid>/encounter/test", methods=["POST"])
+    @app.route(
+        "/admin/openemr/patients/<path:patient_uuid>/encounter/test",
+        methods=["POST"],
+    )
     @admin_auth_required
     def admin_openemr_create_encounter_test(patient_uuid):
         encounter_data = request.get_json(silent=True) or {}
@@ -514,7 +515,9 @@ def create_app():
                 "service": "openemr",
                 "message": str(e),
             }), 500
-    
+
+    return app
+
 
 app = create_app()
 
