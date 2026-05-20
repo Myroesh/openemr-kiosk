@@ -239,10 +239,8 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 - [x] Pedir motivo/tipo de consulta.
 
-- [~] Crear encounter para la fecha actual.
-  - Confirmado: creación real de encounter desde ruta admin protegida.
-  - Encounter de prueba creado correctamente en OpenEMR.
-  - Pendiente: conectar `/confirmar-antiguo` para crear encounter automáticamente tras confirmación.  
+- [x] Crear encounter para la fecha actual.
+  - Confirmado: `/confirmar-antiguo` crea encounter en OpenEMR después de confirmar paciente antiguo.
 
 - [x] Preparar lectura/escritura controlada de encounters desde Flask.
   - Confirmado: `OpenEMRService.get_patient_encounters()` y `create_encounter_for_patient()` agregados.
@@ -314,12 +312,9 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 8. [ ] Conectar flujo de paciente nuevo a creación real en OpenEMR.
 
-9. [~] Crear encounter para paciente antiguo confirmado.
-   - Confirmado: payload de Swagger validado.
-   - Confirmado: ruta admin protegida con dry-run.
-   - Confirmado: encounter creado correctamente en OpenEMR.
-   - Pendiente: conectar `/confirmar-antiguo` al método `create_encounter_for_patient()`.
-   
+9. [x] Crear encounter para paciente antiguo confirmado.
+   - Confirmado: `/confirmar-antiguo` crea encounter real en OpenEMR usando `create_encounter_for_patient()`.
+
 ---
 
 # Comandos útiles actuales
