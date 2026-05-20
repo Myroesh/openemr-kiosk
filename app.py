@@ -743,6 +743,63 @@ def create_app():
                 "message": str(e),
             }), 500
 
+    @app.route("/admin/gemini/consultation-reason/test", methods=["POST"])
+    @admin_auth_required
+    def admin_gemini_consultation_reason_test():
+        payload = request.get_json(silent=True) or {}
+        user_text = str(payload.get("text") or "").strip()
+
+        if not user_text:
+            return jsonify({
+                "status": "error",
+                "service": "gemini",
+                "message": "Debe enviar el campo text.",
+                "example": {
+                    "text": "vengo a revisar mis resultados"
+                },
+            }), 400
+
+        try:
+            gemini = GeminiService()
+            result = gemini.classify_consultation_reason(user_text)
+
+            create_kiosk_event(
+                event_type="gemini_consultation_reason_test",
+                flow_type="admin",
+                status=result.get("status", "unknown"),
+                message="Prueba admin de clasificación de motivo de consulta con Gemini",
+                metadata={
+                    "text_present": bool(user_text),
+                    "reason": result.get("reason"),
+                    "confidence": result.get("confidence"),
+                    "fallback_used": bool(result.get("fallback_used")),
+                    "error_present": bool(result.get("error")),
+                },
+            )
+
+            return jsonify({
+                "status": "ok",
+                "service": "gemini",
+                "result": result,
+            })
+
+        except Exception as e:
+            create_kiosk_event(
+                event_type="gemini_consultation_reason_error",
+                flow_type="admin",
+                status="error",
+                message="Error en prueba admin de clasificación con Gemini",
+                metadata={
+                    "text_present": bool(user_text),
+                    "error": str(e),
+                },
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "gemini",
+                "message": str(e),
+            }), 500
 
     return app
 
