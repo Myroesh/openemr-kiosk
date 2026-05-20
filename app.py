@@ -269,25 +269,67 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
-            create_kiosk_event(
-                event_type="existing_patient_confirmed",
-                flow_type="antiguo",
-                status="pending_encounter",
-                message="Paciente antiguo confirmado contra OpenEMR; pendiente crear encounter",
-                metadata={
-                    "openemr_pid_present": bool(data.get("openemr_pid")),
-                    "openemr_uuid_present": bool(data.get("openemr_uuid")),
-                    "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
-                    "profesional_area": data.get("profesional_area"),
-                    "motivo_consulta_present": bool(data.get("motivo_consulta")),
-                },
-            )
+            patient_uuid = data.get("openemr_uuid")
+            motivo_consulta = data.get("motivo_consulta")
 
-            session.pop("pending_existing", None)
+            try:
+                openemr = OpenEMRService()
+                encounter_payload = openemr.build_kiosk_encounter_payload(
+                    motivo_consulta=motivo_consulta,
+                )
 
-            return redirect(url_for("exito"))
+                result = openemr.create_encounter_for_patient(
+                    patient_uuid=patient_uuid,
+                    encounter_data=encounter_payload,
+                )
 
-        return render_template("confirmar_antiguo.html", data=data)
+                result_data = result.get("data", {}) if isinstance(result, dict) else {}
+                encounter_id = result_data.get("encounter")
+                encounter_uuid = result_data.get("uuid")
+
+                create_kiosk_event(
+                    event_type="existing_patient_encounter_created",
+                    flow_type="antiguo",
+                    status="ok",
+                    message="Encounter creado en OpenEMR para paciente antiguo confirmado",
+                    metadata={
+                        "openemr_pid_present": bool(data.get("openemr_pid")),
+                        "openemr_uuid_present": bool(patient_uuid),
+                        "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
+                        "encounter_id": encounter_id,
+                        "encounter_uuid_present": bool(encounter_uuid),
+                        "profesional_area": data.get("profesional_area"),
+                        "motivo_consulta_present": bool(motivo_consulta),
+                    },
+                )
+
+                session.pop("pending_existing", None)
+
+                return redirect(url_for("exito"))
+
+            except OpenEMRServiceError as e:
+                create_kiosk_event(
+                    event_type="existing_patient_encounter_error",
+                    flow_type="antiguo",
+                    status="error",
+                    message="Error al crear encounter en OpenEMR para paciente antiguo",
+                    metadata={
+                        "openemr_pid_present": bool(data.get("openemr_pid")),
+                        "openemr_uuid_present": bool(patient_uuid),
+                        "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
+                        "error": str(e),
+                    },
+                )
+
+                return render_template(
+                    "confirmar_antiguo.html",
+                    data=data,
+                    errors=[
+                        "No se pudo crear el encuentro en OpenEMR. Avise a recepción."
+                    ],
+                )
+
+        return render_template("confirmar_antiguo.html", data=data, errors=[])
 
     @app.route("/exito")
     def exito():

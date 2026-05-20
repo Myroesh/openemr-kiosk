@@ -1,4 +1,5 @@
 import re
+from datetime import date
 from urllib.parse import quote
 
 import requests
@@ -364,6 +365,38 @@ class OpenEMRService:
             "matched_count": len(matches),
             "patients": matches,
         }
+
+    def build_kiosk_encounter_payload(self, motivo_consulta, encounter_date=None):
+        """
+        Construye el payload validado para crear encounter desde el kiosko.
+
+        Basado en el payload confirmado desde Swagger y probado exitosamente
+        contra OpenEMR.
+        """
+
+        reason = str(motivo_consulta or "").strip()
+
+        if not reason:
+            raise OpenEMRConfigError("motivo_consulta es obligatorio para crear encounter.")
+
+        encounter_date = encounter_date or date.today().isoformat()
+
+        return {
+            "date": encounter_date,
+            "onset_date": "",
+            "reason": reason,
+            "facility": Config.OPENEMR_DEFAULT_FACILITY,
+            "pc_catid": Config.OPENEMR_DEFAULT_PC_CATID,
+            "facility_id": Config.OPENEMR_DEFAULT_FACILITY_ID,
+            "billing_facility": Config.OPENEMR_DEFAULT_BILLING_FACILITY,
+            "sensitivity": Config.OPENEMR_DEFAULT_SENSITIVITY,
+            "referral_source": "",
+            "pos_code": Config.OPENEMR_DEFAULT_POS_CODE,
+            "external_id": "",
+            "provider_id": Config.OPENEMR_DEFAULT_PROVIDER_ID,
+            "class_code": Config.OPENEMR_DEFAULT_CLASS_CODE,
+        }
+
     def get_patient_encounters(self, patient_uuid):
         """
         Lectura segura de encounters de un paciente.

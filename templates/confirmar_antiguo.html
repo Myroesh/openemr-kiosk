@@ -13,7 +13,13 @@
         <h1>Confirmar paciente</h1>
         <p>Revise que el paciente encontrado sea correcto antes de continuar.</p>
       </div>
-
+      {% if errors %}
+        <div class="alert">
+          {% for error in errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
       {% if data.openemr_patient %}
         <div class="summary">
           <div class="summary-row">

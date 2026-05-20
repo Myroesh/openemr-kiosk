@@ -25,7 +25,23 @@ class Config:
         "yes",
         "on",
     )
-
+    OPENEMR_DEFAULT_FACILITY = os.getenv(
+    "OPENEMR_DEFAULT_FACILITY",
+    "Centro Neuropsicologico Saavedra",
+    )
+    OPENEMR_DEFAULT_PC_CATID = os.getenv("OPENEMR_DEFAULT_PC_CATID", "5")
+    OPENEMR_DEFAULT_FACILITY_ID = os.getenv("OPENEMR_DEFAULT_FACILITY_ID", "3")
+    OPENEMR_DEFAULT_BILLING_FACILITY = os.getenv(
+        "OPENEMR_DEFAULT_BILLING_FACILITY",
+        "3",
+    )
+    OPENEMR_DEFAULT_PROVIDER_ID = os.getenv("OPENEMR_DEFAULT_PROVIDER_ID", "1")
+    OPENEMR_DEFAULT_POS_CODE = os.getenv("OPENEMR_DEFAULT_POS_CODE", "0")
+    OPENEMR_DEFAULT_CLASS_CODE = os.getenv("OPENEMR_DEFAULT_CLASS_CODE", "AMB")
+    OPENEMR_DEFAULT_SENSITIVITY = os.getenv(
+        "OPENEMR_DEFAULT_SENSITIVITY",
+        "normal",
+    )
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
