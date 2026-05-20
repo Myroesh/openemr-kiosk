@@ -145,6 +145,7 @@ def validate_new_patient_data(raw_data, professionals):
         "nombres": clean_name(raw_data.get("nombres")),
         "apellidos": clean_name(raw_data.get("apellidos")),
         "fecha_nacimiento": clean_spaces(raw_data.get("fecha_nacimiento")),
+        "sexo": clean_spaces(raw_data.get("sexo")),
         "ci_documento": normalize_ci(raw_data.get("ci_documento")),
         "telefono": normalize_bolivian_mobile(raw_data.get("telefono")),
         "direccion": normalize_text(raw_data.get("direccion")),
@@ -177,6 +178,12 @@ def validate_new_patient_data(raw_data, professionals):
         if age >= 18 and data["es_menor"]:
             errors.append("Por la edad registrada, el paciente no debería marcarse como menor de edad.")
 
+    allowed_sex_values = ("Male", "Female", "Other")
+    if not data["sexo"]:
+        errors.append("Debe seleccionar el sexo del paciente.")
+    elif data["sexo"] not in allowed_sex_values:
+        errors.append("El sexo seleccionado no es válido.")
+    
     data["ci_documento"], ci_error = validate_ci_optional(data["ci_documento"])
     if ci_error:
         errors.append(ci_error)

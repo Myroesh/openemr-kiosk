@@ -447,6 +447,77 @@ class OpenEMRService:
             json=encounter_data,
         )
 
+    def build_kiosk_patient_payload(self, patient_data):
+        """
+        Construye el payload para crear paciente en OpenEMR.
+
+        Basado en el Example Value confirmado desde Swagger para:
+        POST /apis/default/api/patient
+        """
+
+        if not isinstance(patient_data, dict):
+            raise OpenEMRConfigError("patient_data debe ser un objeto.")
+
+        nombres = str(patient_data.get("nombres") or "").strip()
+        apellidos = str(patient_data.get("apellidos") or "").strip()
+        fecha_nacimiento = str(patient_data.get("fecha_nacimiento") or "").strip()
+        telefono = str(patient_data.get("telefono") or "").strip()
+        direccion = str(patient_data.get("direccion") or "").strip()
+        sexo = str(patient_data.get("sexo") or "").strip()
+
+        if not nombres:
+            raise OpenEMRConfigError("nombres es obligatorio para crear paciente.")
+
+        if not apellidos:
+            raise OpenEMRConfigError("apellidos es obligatorio para crear paciente.")
+
+        if not fecha_nacimiento:
+            raise OpenEMRConfigError("fecha_nacimiento es obligatoria para crear paciente.")
+
+        if not telefono:
+            raise OpenEMRConfigError("telefono es obligatorio para crear paciente.")
+        
+        if not sexo:
+            raise OpenEMRConfigError("sexo es obligatorio para crear paciente.")
+            
+        return {
+            "title": "",
+            "fname": nombres,
+            "mname": "",
+            "lname": apellidos,
+            "street": direccion,
+            "postal_code": "",
+            "city": "",
+            "state": "",
+            "country_code": "BO",
+            "phone_contact": telefono,
+            "DOB": fecha_nacimiento,
+            "sex": sexo,
+            "race": "",
+            "ethnicity": "",
+        }
+
+    def create_patient(self, patient_data):
+        """
+        Crea paciente en OpenEMR.
+
+        Importante:
+        - Usar primero mediante ruta admin protegida.
+        - No llamar desde /confirmar hasta validar con paciente controlado.
+        """
+
+        if not isinstance(patient_data, dict):
+            raise OpenEMRConfigError("patient_data debe ser un objeto JSON.")
+
+        if not patient_data:
+            raise OpenEMRConfigError("patient_data no puede estar vacío.")
+
+        return self._request(
+            "POST",
+            "/patient",
+            json=patient_data,
+        )
+
     def health_check(self):
         """
         Prueba segura para verificar conectividad sin exponer datos personales.

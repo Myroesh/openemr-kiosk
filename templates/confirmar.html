@@ -31,6 +31,21 @@
         </div>
 
         <div class="summary-row">
+          <span>Sexo</span>
+            <strong>
+              {% if data.sexo == "Male" %}
+                Masculino
+              {% elif data.sexo == "Female" %}
+                Femenino
+              {% elif data.sexo == "Other" %}
+                Otro
+              {% else %}
+                No registrado
+              {% endif %}
+            </strong>
+        </div>
+
+        <div class="summary-row">
           <span>CI/documento</span>
           <strong>{{ data.ci_documento or "No registrado" }}</strong>
         </div>

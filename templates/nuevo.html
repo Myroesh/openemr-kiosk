@@ -32,6 +32,14 @@
         <label>Fecha de nacimiento</label>
         <input name="fecha_nacimiento" type="date" required value="{{ form.fecha_nacimiento or '' }}">
 
+        <label>Sexo</label>
+        <select name="sexo" required>
+          <option value="">Seleccione una opción</option>
+          <option value="Male" {% if form.sexo == "Male" %}selected{% endif %}>Masculino</option>
+          <option value="Female" {% if form.sexo == "Female" %}selected{% endif %}>Femenino</option>
+          <option value="Other" {% if form.sexo == "Other" %}selected{% endif %}>Otro</option>
+        </select>
+        
         <label>CI / documento <span class="optional">(opcional)</span></label>
         <input name="ci_documento" type="text" inputmode="numeric" value="{{ form.ci_documento or '' }}">
 
