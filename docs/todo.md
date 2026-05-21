@@ -371,10 +371,12 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
    - Opciones: Consulta Inicial, Sesión, Revisión de resultados, Test, Entrevista con los padres.
    - Valor por defecto: Sesión.
 
-11. [ ] Formalizar integración Gemini controlada.
-   - Gemini debe clasificar o asistir la captura, pero solo dentro de campos y catálogos permitidos.
+11. [~] Formalizar integración Gemini controlada.
+   - Confirmado: `GeminiService.classify_consultation_reason()` clasifica `motivo_consulta` dentro de catálogo cerrado.
+   - Confirmado: reglas locales reducen llamadas innecesarias a Gemini.
+   - Confirmado: Gemini no escribe en OpenEMR.
+   - Pendiente: integrar una UI conversacional real sobre el flujo de formularios ya validado.
    - Fallback obligatorio: formulario manual.
-
 
 12. [x] Resolver autenticación OAuth estable para OpenEMR.
    - Confirmado: cliente OAuth Flask registrado mediante Dynamic Client Registration.
