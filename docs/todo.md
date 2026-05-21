@@ -320,6 +320,13 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 ## Fase 10 - Despliegue local estable
 
+- [x] Probar comportamiento después de reiniciar el servidor.
+  - Confirmado: servidor reinició correctamente.
+  - Confirmado: OpenEMR siguió accesible después del reboot.
+  - Confirmado: `data/openemr_tokens.json` persistió correctamente.
+  - Confirmado: `/health/openemr` respondió `status: ok` después de levantar Flask manualmente.
+  - Confirmado: token store conserva `source: refresh_token`.
+
 - [ ] No usar Flask debug server para producción.
 - [ ] Configurar Gunicorn o servicio systemd.
 - [ ] Definir puerto interno o proxy por Apache.
