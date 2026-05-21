@@ -180,7 +180,9 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
   - Confirmado: `/admin/openemr/oauth/start` y `/admin/openemr/oauth/callback` completan OAuth desde Flask.
   - Confirmado: `refresh_token_present: true`.
   - Confirmado: `OpenEMRService` lee tokens desde JSON y puede renovar usando refresh token.
-
+  - Confirmado: renovación real probada forzando expiración local del token.
+  - Confirmado: después de renovar, `data/openemr_tokens.json` quedó con `source: refresh_token`.
+  - Confirmado: `/health/openemr` respondió `status: ok` después de renovar.
 ---
 
 ## Fase 5 - Validaciones antes de OpenEMR
@@ -376,13 +378,15 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
    - Confirmado: reglas locales reducen llamadas innecesarias a Gemini.
    - Confirmado: Gemini no escribe en OpenEMR.
    - Pendiente: integrar una UI conversacional real sobre el flujo de formularios ya validado.
-   - Fallback obligatorio: formulario manual.
+   - Fallback obligatorio: formulario manual. 
 
 12. [x] Resolver autenticación OAuth estable para OpenEMR.
    - Confirmado: cliente OAuth Flask registrado mediante Dynamic Client Registration.
    - Confirmado: `offline_access` habilitado.
    - Confirmado: OAuth start/callback obtiene `refresh_token`.
    - Confirmado: tokens se guardan en `data/openemr_tokens.json`.
+   - Confirmado: renovación real con `refresh_token` probada exitosamente.
+   - Confirmado: después de renovar, `/health/openemr` respondió correctamente.
    - Confirmado: el sistema ya no depende exclusivamente de copiar Bearer tokens desde Swagger.
 
 ---
