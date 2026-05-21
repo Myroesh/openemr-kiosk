@@ -87,7 +87,7 @@ def is_access_token_expired(buffer_seconds=120):
     try:
         parsed = datetime.fromisoformat(expires_at)
     except ValueError:
-        return False
+        return True
 
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
