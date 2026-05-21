@@ -1,3 +1,4 @@
+import secrets
 from functools import wraps
 
 from flask import (
@@ -862,6 +863,144 @@ def create_app():
             "message": "Tokens guardados.",
             "token": public_token_status(),
         })
+
+    @app.route("/admin/openemr/oauth/start")
+    @admin_auth_required
+    def admin_openemr_oauth_start():
+        state = secrets.token_urlsafe(32)
+        session["openemr_oauth_state"] = state
+
+        try:
+            openemr = OpenEMRService()
+            authorization_url = openemr.build_authorization_url(
+                redirect_uri=Config.OPENEMR_OAUTH_REDIRECT_URI,
+                state=state,
+                scope=Config.OPENEMR_OAUTH_SCOPES,
+            )
+
+            create_kiosk_event(
+                event_type="openemr_oauth_start",
+                flow_type="admin",
+                status="ok",
+                message="Inicio de flujo OAuth OpenEMR desde panel admin",
+                metadata={
+                    "redirect_uri_present": bool(Config.OPENEMR_OAUTH_REDIRECT_URI),
+                    "scopes_present": bool(Config.OPENEMR_OAUTH_SCOPES),
+                },
+            )
+
+            return redirect(authorization_url)
+
+        except OpenEMRServiceError as e:
+            create_kiosk_event(
+                event_type="openemr_oauth_start_error",
+                flow_type="admin",
+                status="error",
+                message="Error al iniciar OAuth OpenEMR",
+                metadata={"error": str(e)},
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
+
+    @app.route("/admin/openemr/oauth/callback")
+    def admin_openemr_oauth_callback():
+        error = request.args.get("error")
+        error_description = request.args.get("error_description")
+
+        if error:
+            create_kiosk_event(
+                event_type="openemr_oauth_callback_error",
+                flow_type="admin",
+                status="error",
+                message="OpenEMR devolvió error en callback OAuth",
+                metadata={
+                    "error": error,
+                    "error_description": error_description,
+                },
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": error,
+                "description": error_description,
+            }), 400
+
+        code = request.args.get("code")
+        state = request.args.get("state")
+        expected_state = session.pop("openemr_oauth_state", None)
+
+        if not expected_state or state != expected_state:
+            create_kiosk_event(
+                event_type="openemr_oauth_state_error",
+                flow_type="admin",
+                status="error",
+                message="OAuth state inválido o ausente",
+                metadata={
+                    "state_present": bool(state),
+                    "expected_state_present": bool(expected_state),
+                },
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": "OAuth state inválido o ausente.",
+            }), 400
+
+        if not code:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": "OpenEMR no devolvió authorization code.",
+            }), 400
+
+        try:
+            openemr = OpenEMRService()
+            exchange_result = openemr.exchange_authorization_code(
+                code=code,
+                redirect_uri=Config.OPENEMR_OAUTH_REDIRECT_URI,
+            )
+
+            create_kiosk_event(
+                event_type="openemr_oauth_callback_success",
+                flow_type="admin",
+                status="ok",
+                message="OAuth OpenEMR completado y tokens guardados",
+                metadata={
+                    "access_token_present": bool(exchange_result.get("access_token_present")),
+                    "refresh_token_present": bool(exchange_result.get("refresh_token_present")),
+                    "expires_in_present": bool(exchange_result.get("expires_in")),
+                    "scope_present": bool(exchange_result.get("scope")),
+                },
+            )
+
+            return jsonify({
+                "status": "ok",
+                "service": "openemr",
+                "message": "OAuth completado. Tokens guardados.",
+                "exchange": exchange_result,
+                "token": public_token_status(),
+            })
+
+        except OpenEMRServiceError as e:
+            create_kiosk_event(
+                event_type="openemr_oauth_callback_exchange_error",
+                flow_type="admin",
+                status="error",
+                message="Error al intercambiar authorization code por tokens",
+                metadata={"error": str(e)},
+            )
+
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": str(e),
+            }), 500
 
     return app
 

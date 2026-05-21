@@ -46,6 +46,11 @@ class Config:
         "OPENEMR_TOKEN_FILE",
         "data/openemr_tokens.json",
     )
+    OPENEMR_OAUTH_REDIRECT_URI = os.getenv("OPENEMR_OAUTH_REDIRECT_URI")
+    OPENEMR_OAUTH_SCOPES = os.getenv(
+        "OPENEMR_OAUTH_SCOPES",
+        "openid offline_access api:oemr user/patient.read user/patient.write user/encounter.read user/encounter.write user/practitioner.read user/facility.read user/user.read",
+    )
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 

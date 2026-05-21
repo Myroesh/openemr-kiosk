@@ -1,6 +1,6 @@
 import re
 from datetime import date
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 import requests
 
@@ -117,6 +117,124 @@ class OpenEMRService:
     @property
     def token_url(self):
         return f"{self.base_url}/oauth2/{self.site}/token"
+
+    @property
+    def authorize_url(self):
+        return f"{self.base_url}/oauth2/{self.site}/authorize"
+
+    def build_authorization_url(self, redirect_uri, state, scope):
+        """
+        Construye URL de autorización OAuth2/OpenID Connect para OpenEMR.
+        """
+
+        redirect_uri = self._clean_optional_secret(redirect_uri)
+        state = self._clean_optional_secret(state)
+        scope = self._clean_optional_secret(scope)
+
+        if not self.client_id:
+            raise OpenEMRConfigError("OPENEMR_CLIENT_ID no está configurado.")
+
+        if not redirect_uri:
+            raise OpenEMRConfigError("OPENEMR_OAUTH_REDIRECT_URI no está configurado.")
+
+        if not state:
+            raise OpenEMRConfigError("OAuth state es obligatorio.")
+
+        if not scope:
+            raise OpenEMRConfigError("OPENEMR_OAUTH_SCOPES no está configurado.")
+
+        params = {
+            "response_type": "code",
+            "client_id": self.client_id,
+            "redirect_uri": redirect_uri,
+            "scope": scope,
+            "state": state,
+            "prompt": "consent",
+        }
+
+        return f"{self.authorize_url}?{urlencode(params)}"
+
+    def exchange_authorization_code(self, code, redirect_uri):
+        """
+        Intercambia authorization code por access_token y refresh_token.
+        """
+
+        code = self._clean_optional_secret(code)
+        redirect_uri = self._clean_optional_secret(redirect_uri)
+
+        if not code:
+            raise OpenEMRConfigError("Authorization code no recibido.")
+
+        if not redirect_uri:
+            raise OpenEMRConfigError("OPENEMR_OAUTH_REDIRECT_URI no está configurado.")
+
+        if not self.client_id:
+            raise OpenEMRConfigError("OPENEMR_CLIENT_ID no está configurado.")
+
+        if not self.client_secret:
+            raise OpenEMRConfigError("OPENEMR_CLIENT_SECRET no está configurado.")
+
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+        }
+
+        try:
+            response = self.session.post(
+                self.token_url,
+                data=data,
+                timeout=20,
+                verify=self.verify_ssl,
+            )
+        except requests.RequestException as exc:
+            raise OpenEMRServiceError(
+                f"No se pudo conectar al token endpoint de OpenEMR: {exc}"
+            ) from exc
+
+        if response.status_code >= 400:
+            raise OpenEMRServiceError(
+                f"OpenEMR rechazó el authorization code. "
+                f"HTTP {response.status_code}: {response.text[:500]}"
+            )
+
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise OpenEMRServiceError(
+                "OpenEMR respondió al token endpoint, pero no devolvió JSON válido."
+            ) from exc
+
+        access_token = payload.get("access_token")
+        refresh_token = payload.get("refresh_token")
+
+        if not access_token:
+            raise OpenEMRServiceError(
+                "OpenEMR no devolvió access_token al intercambiar authorization code."
+            )
+
+        save_openemr_tokens({
+            "access_token": access_token,
+            "refresh_token": refresh_token or "",
+            "expires_in": payload.get("expires_in"),
+            "expires_at": calculate_expires_at(payload.get("expires_in")),
+            "scope": payload.get("scope"),
+            "token_type": payload.get("token_type"),
+            "source": "authorization_code",
+        })
+
+        self.access_token = access_token
+        self.refresh_token = refresh_token or ""
+
+        return {
+            "access_token_present": bool(access_token),
+            "refresh_token_present": bool(refresh_token),
+            "expires_in": payload.get("expires_in"),
+            "scope": payload.get("scope"),
+            "token_type": payload.get("token_type"),
+        }    
 
     def _get_access_token(self):
         """

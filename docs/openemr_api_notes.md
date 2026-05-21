@@ -11,6 +11,9 @@ Notas verificadas para integración del kiosko Flask con OpenEMR.
 - Swagger confirmado: `https://100.124.189.84/swagger/`
 - API base confirmada: `https://100.124.189.84/apis/default/api`
 - Endpoint de pacientes confirmado: `GET /api/patient`
+- OAuth Flask confirmado: `/admin/openemr/oauth/start` y `/admin/openemr/oauth/callback`.
+- Refresh token confirmado: `refresh_token_present: true`.
+- Token store confirmado: `data/openemr_tokens.json`.
 
 ## Connectors
 
@@ -76,33 +79,10 @@ user/encounter.write
 
 ## Registro de cliente Standard API
 
-El cliente funcional fue creado para acceso a la Standard API.
-
-Configuración usada conceptualmente:
-
-- Application Type: private/confidential
-- Redirect URI: `https://100.124.189.84/swagger/oauth2-redirect.html`
-- Client name: `OpenEMR Kiosk Flask Standard API`
-- API principal: `api:oemr`
-
-Scopes objetivo para el kiosko:
+El cliente funcional para Standard API se registra mediante Dynamic Client Registration:
 
 ```text
-openid
-offline_access
-api:oemr
-user/patient.read
-user/patient.write
-user/encounter.read
-user/encounter.write
-user/practitioner.read
-user/facility.read
-user/user.read
-```
-
-Nota:
-
-No guardar `client_id` ni `client_secret` reales en GitHub. Deben ir solamente en `.env` local.
+POST /oauth2/default/registration
 
 ## Problemas encontrados y resolución
 
@@ -272,17 +252,15 @@ OPENEMR_CLIENT_SECRET=OCULTO
 
 ## Próximos pasos técnicos
 
-Orden recomendado:
+Orden recomendado desde el estado actual:
 
-1. Probar búsqueda filtrada de paciente por nombre.
-2. Probar búsqueda filtrada por teléfono.
-3. Determinar campos mínimos confiables para identificar paciente existente.
-4. Probar `POST /api/patient` con paciente de prueba controlado.
-5. Probar creación de encounter para paciente existente.
-6. Implementar servicio `openemr_service.py` en Flask.
-7. Conectar flujo de paciente antiguo a búsqueda real en OpenEMR.
-8. Conectar flujo de paciente nuevo a creación real en OpenEMR.
-9. Mantener guardado local SQLite como respaldo/auditoría.
+1. Mantener flujo de formularios como MVP operativo.
+2. Probar renovación real de token dejando expirar access token o forzando expiración.
+3. Completar pruebas pendientes de Fase 9.
+4. Preparar despliegue local estable sin Flask debug server.
+5. Configurar servicio systemd o Gunicorn.
+6. Documentar operación local para personal técnico.
+7. Luego continuar con interfaz conversacional Gemini sobre la arquitectura validada.
 
 ## Endpoints relevantes para el kiosko
 
@@ -318,15 +296,25 @@ POST /apis/default/api/patient/{puuid}/encounter
 
 ## Estado final de esta fase
 
-La fase de validación API queda marcada como completada:
+La fase de integración API y OAuth queda marcada como completada:
 
-- [x] Swagger localizado
-- [x] Connectors activados
-- [x] HTTPS configurado
-- [x] Site Address Override configurado
-- [x] Cliente OAuth2 funcional
-- [x] Cliente habilitado
-- [x] Bearer token obtenido
-- [x] `GET /api/patient` confirmado con respuesta real
-- [x] Se identificó que el error `invalid_client` fue por secret incompleto
-- [x] Pendiente implementar consumo API desde Flask
+- [x] Swagger localizado.
+- [x] Connectors activados.
+- [x] HTTPS configurado.
+- [x] Site Address Override configurado.
+- [x] Cliente OAuth2 Swagger funcional.
+- [x] Cliente OAuth2 Flask funcional.
+- [x] Cliente Flask registrado mediante Dynamic Client Registration.
+- [x] `application_type: private` confirmado como campo crítico.
+- [x] `offline_access` confirmado.
+- [x] Bearer token obtenido.
+- [x] Refresh token obtenido.
+- [x] Tokens guardados en `data/openemr_tokens.json`.
+- [x] `/admin/openemr/token/status` confirmado.
+- [x] `/admin/openemr/token/save-manual` confirmado.
+- [x] `/admin/openemr/oauth/start` confirmado.
+- [x] `/admin/openemr/oauth/callback` confirmado.
+- [x] `GET /api/patient` confirmado con respuesta real.
+- [x] `POST /api/patient` confirmado con paciente de prueba.
+- [x] `POST /api/patient/{puuid}/encounter` confirmado con encounter de prueba.
+- [x] Flask consume OpenEMR API mediante `OpenEMRService`.

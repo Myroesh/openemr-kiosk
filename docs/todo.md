@@ -159,19 +159,28 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 ## Fase 4 - Autenticación OpenEMR desde Flask
 
 - [x] Definir método OAuth2 correcto para la instalación real.
-  - Confirmado: OAuth2 funcional por HTTPS con cliente Standard API.
+  - Confirmado: OAuth2/OpenID Connect funcional por HTTPS con cliente Standard API.
 
 - [x] Crear cliente API si corresponde.
-  - Confirmado: cliente `OpenEMR Kiosk Flask Standard API` creado y habilitado.
+  - Confirmado: cliente `OpenEMR Kiosk Flask Standard API` creado y habilitado para Swagger.
+  - Confirmado: cliente `OpenEMR Kiosk Flask OAuth` creado y habilitado para Flask OAuth.
+  - Método correcto: registro dinámico vía `POST /oauth2/default/registration`.
+  - Campo crítico confirmado: `"application_type": "private"`.
 
 - [x] Guardar credenciales solo en `.env` local.
-  - Criterio definido: no guardar `client_id`, `client_secret`, tokens ni claves reales en GitHub.
+  - Criterio definido: no guardar `client_id`, `client_secret`, access tokens, refresh tokens ni claves reales en GitHub.
 
 - [x] Probar llamada simple autenticada sin crear datos.
   - Confirmado: `GET /apis/default/api/patient` respondió correctamente.
 
-- [~] Manejar expiración/renovación de token.
-  - Pendiente solución estable. Por ahora se usa `OPENEMR_ACCESS_TOKEN` manual desde Swagger; no usar placeholder en `OPENEMR_REFRESH_TOKEN`.
+- [x] Manejar expiración/renovación de token.
+  - Confirmado: tokens se guardan en `data/openemr_tokens.json`.
+  - Confirmado: `/admin/openemr/token/status` muestra estado sin exponer tokens completos.
+  - Confirmado: `/admin/openemr/token/save-manual` permite cargar access token temporal.
+  - Confirmado: `/admin/openemr/oauth/start` y `/admin/openemr/oauth/callback` completan OAuth desde Flask.
+  - Confirmado: `refresh_token_present: true`.
+  - Confirmado: `OpenEMRService` lee tokens desde JSON y puede renovar usando refresh token.
+
 ---
 
 ## Fase 5 - Validaciones antes de OpenEMR
@@ -365,6 +374,14 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 11. [ ] Formalizar integración Gemini controlada.
    - Gemini debe clasificar o asistir la captura, pero solo dentro de campos y catálogos permitidos.
    - Fallback obligatorio: formulario manual.
+
+
+12. [x] Resolver autenticación OAuth estable para OpenEMR.
+   - Confirmado: cliente OAuth Flask registrado mediante Dynamic Client Registration.
+   - Confirmado: `offline_access` habilitado.
+   - Confirmado: OAuth start/callback obtiene `refresh_token`.
+   - Confirmado: tokens se guardan en `data/openemr_tokens.json`.
+   - Confirmado: el sistema ya no depende exclusivamente de copiar Bearer tokens desde Swagger.
 
 ---
 
