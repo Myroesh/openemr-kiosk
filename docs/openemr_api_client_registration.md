@@ -1,4 +1,3 @@
-cat > /opt/openemr-kiosk/docs/openemr_api_client_registration.md <<'EOF'
 # Registro de API Client OpenEMR para Kiosko Flask
 
 ## Objetivo
@@ -319,4 +318,3 @@ git status
 - OpenEMR muestra pantalla de autorización.
 - `/admin/openemr/oauth/callback` recibe el código y guarda tokens.
 - `/admin/openemr/token/status` confirma `refresh_token_present: true`.
-EOF
