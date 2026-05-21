@@ -542,12 +542,17 @@ class OpenEMRService:
 
         encounter_date = encounter_date or date.today().isoformat()
 
+        visit_category_id = Config.OPENEMR_VISIT_CATEGORY_MAP.get(
+            reason,
+            Config.OPENEMR_DEFAULT_PC_CATID,
+        )
+
         return {
             "date": encounter_date,
             "onset_date": "",
             "reason": reason,
             "facility": Config.OPENEMR_DEFAULT_FACILITY,
-            "pc_catid": Config.OPENEMR_DEFAULT_PC_CATID,
+            "pc_catid": visit_category_id,
             "facility_id": Config.OPENEMR_DEFAULT_FACILITY_ID,
             "billing_facility": Config.OPENEMR_DEFAULT_BILLING_FACILITY,
             "sensitivity": Config.OPENEMR_DEFAULT_SENSITIVITY,

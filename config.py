@@ -30,6 +30,30 @@ class Config:
         "Centro Neuropsicologico Saavedra",
     )
     OPENEMR_DEFAULT_PC_CATID = os.getenv("OPENEMR_DEFAULT_PC_CATID", "5")
+
+    OPENEMR_VISIT_CATEGORY_MAP = {
+        "Consulta Inicial": os.getenv(
+            "OPENEMR_CAT_CONSULTA_INICIAL",
+            OPENEMR_DEFAULT_PC_CATID,
+        ),
+        "Sesión": os.getenv(
+            "OPENEMR_CAT_SESION",
+            OPENEMR_DEFAULT_PC_CATID,
+        ),
+        "Revisión de resultados": os.getenv(
+            "OPENEMR_CAT_REVISION_RESULTADOS",
+            OPENEMR_DEFAULT_PC_CATID,
+        ),
+        "Test": os.getenv(
+            "OPENEMR_CAT_TEST",
+            OPENEMR_DEFAULT_PC_CATID,
+        ),
+        "Entrevista con los padres": os.getenv(
+            "OPENEMR_CAT_ENTREVISTA_PADRES",
+            OPENEMR_DEFAULT_PC_CATID,
+        ),
+    }
+
     OPENEMR_DEFAULT_FACILITY_ID = os.getenv("OPENEMR_DEFAULT_FACILITY_ID", "3")
     OPENEMR_DEFAULT_BILLING_FACILITY = os.getenv(
         "OPENEMR_DEFAULT_BILLING_FACILITY",

@@ -51,9 +51,6 @@
 
         <label>Motivo de consulta</label>
         <select name="motivo_consulta" required>
-          <option value="Consulta Inicial" {% if form.motivo_consulta == "Consulta Inicial" %}selected{% endif %}>
-            Consulta Inicial
-          </option>
           <option value="Sesión" {% if form.motivo_consulta == "Sesión" or not form.motivo_consulta %}selected{% endif %}>
             Sesión
           </option>
