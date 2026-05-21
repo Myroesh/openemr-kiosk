@@ -14,6 +14,7 @@ from services.token_store import (
     save_openemr_tokens,
 )
 
+
 class OpenEMRServiceError(Exception):
     """Error controlado para fallos de comunicación con OpenEMR."""
 
@@ -557,6 +558,9 @@ class OpenEMRService:
             "/patient",
             json=patient_data,
         )
+
+    def token_status(self):
+        return public_token_status()
 
     def health_check(self):
         """

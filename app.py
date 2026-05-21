@@ -834,7 +834,7 @@ def create_app():
                 "message": "Debe enviar access_token o refresh_token.",
             }), 400
 
-        saved = save_openemr_tokens({
+        save_openemr_tokens(...){
             "access_token": access_token,
             "refresh_token": refresh_token,
             "expires_in": expires_in,
@@ -862,7 +862,7 @@ def create_app():
             "message": "Tokens guardados.",
             "token": public_token_status(),
         })
-        
+
     return app
 
 
