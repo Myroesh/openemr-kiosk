@@ -75,7 +75,17 @@ def get_refresh_token():
 
 
 def token_expires_at():
-    return str(load_openemr_tokens().get("expires_at") or "").strip()
+    data = load_openemr_tokens()
+
+    if "expires_at" not in data:
+        return ""
+
+    value = data.get("expires_at")
+
+    if value is None:
+        return ""
+
+    return str(value).strip()
 
 
 def is_access_token_expired(buffer_seconds=120):
@@ -83,6 +93,9 @@ def is_access_token_expired(buffer_seconds=120):
 
     if not expires_at:
         return False
+
+    if expires_at in ("0", "expired", "EXPIRED"):
+        return True
 
     try:
         parsed = datetime.fromisoformat(expires_at)
