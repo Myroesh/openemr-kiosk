@@ -25,7 +25,11 @@ from services.validation_service import (
     validate_new_patient_data,
     validate_existing_patient_data,
 )
-
+from services.token_store import (
+    calculate_expires_at,
+    public_token_status,
+    save_openemr_tokens,
+)
 
 def check_admin_auth(username, password):
     return (
@@ -801,6 +805,64 @@ def create_app():
                 "message": str(e),
             }), 500
 
+    @app.route("/admin/openemr/token/status")
+    @admin_auth_required
+    def admin_openemr_token_status():
+        return jsonify({
+            "status": "ok",
+            "service": "openemr",
+            "token": public_token_status(),
+        })
+
+    @app.route("/admin/openemr/token/save-manual", methods=["POST"])
+    @admin_auth_required
+    def admin_openemr_token_save_manual():
+        payload = request.get_json(silent=True) or {}
+
+        access_token = str(payload.get("access_token") or "").strip()
+        refresh_token = str(payload.get("refresh_token") or "").strip()
+        expires_in = payload.get("expires_in")
+        scope = str(payload.get("scope") or "").strip()
+
+        if access_token.startswith("Bearer "):
+            access_token = access_token.replace("Bearer ", "", 1).strip()
+
+        if not access_token and not refresh_token:
+            return jsonify({
+                "status": "error",
+                "service": "openemr",
+                "message": "Debe enviar access_token o refresh_token.",
+            }), 400
+
+        saved = save_openemr_tokens({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_in": expires_in,
+            "expires_at": calculate_expires_at(expires_in),
+            "scope": scope,
+            "source": "manual_admin",
+        })
+
+        create_kiosk_event(
+            event_type="openemr_token_saved_manual",
+            flow_type="admin",
+            status="ok",
+            message="Tokens de OpenEMR guardados manualmente desde panel admin",
+            metadata={
+                "access_token_present": bool(access_token),
+                "refresh_token_present": bool(refresh_token),
+                "expires_in_present": bool(expires_in),
+                "scope_present": bool(scope),
+            },
+        )
+
+        return jsonify({
+            "status": "ok",
+            "service": "openemr",
+            "message": "Tokens guardados.",
+            "token": public_token_status(),
+        })
+        
     return app
 
 

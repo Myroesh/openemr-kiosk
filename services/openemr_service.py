@@ -5,7 +5,14 @@ from urllib.parse import quote
 import requests
 
 from config import Config
-
+from services.token_store import (
+    calculate_expires_at,
+    get_access_token,
+    get_refresh_token,
+    is_access_token_expired,
+    public_token_status,
+    save_openemr_tokens,
+)
 
 class OpenEMRServiceError(Exception):
     """Error controlado para fallos de comunicación con OpenEMR."""
@@ -33,8 +40,15 @@ class OpenEMRService:
         self.site = Config.OPENEMR_SITE or "default"
         self.client_id = self._clean_optional_secret(Config.OPENEMR_CLIENT_ID)
         self.client_secret = self._clean_optional_secret(Config.OPENEMR_CLIENT_SECRET)
-        self.access_token = self._clean_optional_secret(Config.OPENEMR_ACCESS_TOKEN)
-        self.refresh_token = self._clean_optional_secret(Config.OPENEMR_REFRESH_TOKEN)
+        stored_access_token = get_access_token()
+        stored_refresh_token = get_refresh_token()
+
+        self.access_token = self._clean_optional_secret(
+            stored_access_token or Config.OPENEMR_ACCESS_TOKEN
+        )
+        self.refresh_token = self._clean_optional_secret(
+            stored_refresh_token or Config.OPENEMR_REFRESH_TOKEN
+        )
         self.verify_ssl = Config.OPENEMR_VERIFY_SSL
 
         self.session = requests.Session()
@@ -108,11 +122,24 @@ class OpenEMRService:
         Devuelve un access token usable.
 
         Prioridad:
-        1. OPENEMR_ACCESS_TOKEN si está definido.
-        2. Renovar usando OPENEMR_REFRESH_TOKEN si está definido.
+        1. Token guardado en data/openemr_tokens.json.
+        2. OPENEMR_ACCESS_TOKEN desde .env.
+        3. Renovar usando refresh_token si existe.
 
-        No usamos Password Grant porque en la instalación confirmada está apagado.
+        El .env queda como fallback de desarrollo.
         """
+
+        stored_access_token = get_access_token()
+        stored_refresh_token = get_refresh_token()
+
+        if stored_access_token:
+            self.access_token = self._clean_optional_secret(stored_access_token)
+
+        if stored_refresh_token:
+            self.refresh_token = self._clean_optional_secret(stored_refresh_token)
+
+        if self.refresh_token and is_access_token_expired():
+            return self._refresh_access_token()
 
         if self.access_token:
             return self.access_token
@@ -121,7 +148,7 @@ class OpenEMRService:
             return self._refresh_access_token()
 
         raise OpenEMRConfigError(
-            "No hay OPENEMR_ACCESS_TOKEN ni OPENEMR_REFRESH_TOKEN configurado en .env."
+            "No hay access_token ni refresh_token configurado para OpenEMR."
         )
 
     def _refresh_access_token(self):
@@ -164,6 +191,7 @@ class OpenEMRService:
             ) from exc
 
         access_token = payload.get("access_token")
+        refresh_token = payload.get("refresh_token") or self.refresh_token
 
         if not access_token:
             raise OpenEMRServiceError(
@@ -171,6 +199,18 @@ class OpenEMRService:
             )
 
         self.access_token = access_token
+        self.refresh_token = refresh_token
+
+        save_openemr_tokens({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_in": payload.get("expires_in"),
+            "expires_at": calculate_expires_at(payload.get("expires_in")),
+            "scope": payload.get("scope"),
+            "token_type": payload.get("token_type"),
+            "source": "refresh_token",
+        })
+
         return self.access_token
 
     def _request(self, method, path, params=None, json=None, retry_on_unauthorized=True):

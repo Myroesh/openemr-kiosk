@@ -42,6 +42,10 @@ class Config:
         "OPENEMR_DEFAULT_SENSITIVITY",
         "normal",
     )
+    OPENEMR_TOKEN_FILE = os.getenv(
+        "OPENEMR_TOKEN_FILE",
+        "data/openemr_tokens.json",
+    )
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
