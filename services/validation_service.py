@@ -207,10 +207,10 @@ def validate_new_patient_data(raw_data, professionals):
     if phone_error:
         errors.append(phone_error)
 
-    if not data["motivo_consulta"]:
-        errors.append("El motivo de consulta es obligatorio.")
-    elif data["motivo_consulta"] not in EXISTING_PATIENT_CONSULTATION_REASONS:
-        errors.append("El motivo de consulta seleccionado no es válido para paciente antiguo.")
+    data["motivo_consulta"] = "Consulta Inicial"
+
+    if data["motivo_consulta"] not in NEW_PATIENT_CONSULTATION_REASONS:
+        errors.append("Para paciente nuevo, el motivo debe ser Consulta Inicial.")
 
     if not data["profesional_area"]:
         errors.append("Debe seleccionar un profesional.")

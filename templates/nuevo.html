@@ -49,21 +49,9 @@
         <label>Dirección</label>
         <input name="direccion" type="text" value="{{ form.direccion or '' }}">
 
-        <label>Motivo de consulta</label>
-        <select name="motivo_consulta" required>
-          <option value="Sesión" {% if form.motivo_consulta == "Sesión" or not form.motivo_consulta %}selected{% endif %}>
-            Sesión
-          </option>
-          <option value="Revisión de resultados" {% if form.motivo_consulta == "Revisión de resultados" %}selected{% endif %}>
-            Revisión de resultados
-          </option>
-          <option value="Test" {% if form.motivo_consulta == "Test" %}selected{% endif %}>
-            Test
-          </option>
-          <option value="Entrevista con los padres" {% if form.motivo_consulta == "Entrevista con los padres" %}selected{% endif %}>
-            Entrevista con los padres
-          </option>
-        </select>
+        <label>Tipo de visita</label>
+        <input type="hidden" name="motivo_consulta" value="Consulta Inicial">
+        <div class="readonly-field">Consulta Inicial</div>
 
         <label>Profesional</label>
         <select name="profesional_area">
