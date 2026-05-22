@@ -32,6 +32,7 @@ from services.token_store import (
     save_openemr_tokens,
 )
 
+
 def check_admin_auth(username, password):
     return (
         username == Config.ADMIN_USERNAME
@@ -90,7 +91,6 @@ def create_app():
                     form=data,
                     professionals=Config.PROFESSIONALS,
                 )
-            
 
             try:
                 openemr = OpenEMRService()
@@ -122,7 +122,6 @@ def create_app():
                     professionals=Config.PROFESSIONALS,
                 )
 
-            duplicate_matches = duplicate_result.get("patients", [])
             duplicate_count = duplicate_result.get("matched_count", 0)
 
             if duplicate_count > 0:
@@ -147,8 +146,7 @@ def create_app():
                     professionals=Config.PROFESSIONALS,
                 )
 
-
-
+            session.pop("pending_intake_processing", None)
             session["pending_intake"] = data
 
             create_kiosk_event(
@@ -282,6 +280,7 @@ def create_app():
             data["openemr_uuid"] = matched_patient.get("uuid")
             data["openemr_pubpid"] = matched_patient.get("pubpid")
 
+            session.pop("pending_existing_processing", None)
             session["pending_existing"] = data
 
             create_kiosk_event(
@@ -330,6 +329,7 @@ def create_app():
                 return redirect(url_for("exito"))
 
             session["pending_intake_processing"] = True
+
             try:
                 openemr = OpenEMRService()
 
@@ -353,6 +353,8 @@ def create_app():
                             "telefono_present": bool(data.get("telefono")),
                         },
                     )
+
+                    session.pop("pending_intake_processing", None)
 
                     return render_template(
                         "confirmar.html",
@@ -435,7 +437,9 @@ def create_app():
                         "sexo_present": bool(data.get("sexo")),
                     },
                 )
+
                 session.pop("pending_intake_processing", None)
+
                 return render_template(
                     "confirmar.html",
                     data=data,
@@ -454,7 +458,6 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
-
             if session.get("pending_existing_processing"):
                 create_kiosk_event(
                     event_type="existing_patient_duplicate_submit_blocked",
@@ -480,6 +483,7 @@ def create_app():
                     motivo_consulta=motivo_consulta,
                     professional_area=data.get("profesional_area"),
                 )
+
                 result = openemr.create_encounter_for_patient(
                     patient_uuid=patient_uuid,
                     encounter_data=encounter_payload,
@@ -506,9 +510,9 @@ def create_app():
                 )
 
                 session.pop("pending_existing", None)
+                session.pop("pending_existing_processing", None)
 
                 return redirect(url_for("exito"))
-                session.pop("pending_existing_processing", None)
 
             except OpenEMRServiceError as e:
                 create_kiosk_event(
@@ -523,6 +527,8 @@ def create_app():
                         "error": str(e),
                     },
                 )
+
+                session.pop("pending_existing_processing", None)
 
                 return render_template(
                     "confirmar_antiguo.html",
@@ -629,7 +635,6 @@ def create_app():
             })
 
         except OpenEMRServiceError as e:
-            session.pop("pending_existing_processing", None)
             return jsonify({
                 "status": "error",
                 "service": "openemr",
