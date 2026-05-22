@@ -79,11 +79,34 @@ class Config:
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
     PROFESSIONALS = [
-    "Dra. Ana Saavedra",
-    "Dra. Evelyn Mejia Patiño",
-    "Dra. Katherine Oliveira",
-    "Dr. Jose Montaño",
-    "Dr. Hernan Hinojosa",
+        "Dra. Ana Saavedra",
+        "Dra. Evelyn Mejia Patiño",
+        "Dra. Katherine Oliveira",
+        "Dr. Jose Montaño",
+        "Dr. Hernan Hinojosa",
     ]
+
+    OPENEMR_PROVIDER_ID_MAP = {
+        "Dra. Ana Saavedra": os.getenv(
+            "OPENEMR_PROVIDER_ANA_SAAVEDRA",
+            OPENEMR_DEFAULT_PROVIDER_ID,
+        ),
+        "Dra. Evelyn Mejia Patiño": os.getenv(
+            "OPENEMR_PROVIDER_EVELYN_MEJIA_PATINO",
+            OPENEMR_DEFAULT_PROVIDER_ID,
+        ),
+        "Dra. Katherine Oliveira": os.getenv(
+            "OPENEMR_PROVIDER_KATHERINE_OLIVEIRA",
+            OPENEMR_DEFAULT_PROVIDER_ID,
+        ),
+        "Dr. Jose Montaño": os.getenv(
+            "OPENEMR_PROVIDER_JOSE_MONTANO",
+            OPENEMR_DEFAULT_PROVIDER_ID,
+        ),
+        "Dr. Hernan Hinojosa": os.getenv(
+            "OPENEMR_PROVIDER_HERNAN_HINOJOSA",
+            OPENEMR_DEFAULT_PROVIDER_ID,
+        ),
+    }
 
     KIOSK_DB_PATH = os.getenv("KIOSK_DB_PATH", "data/kiosk.db")
