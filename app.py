@@ -380,6 +380,7 @@ def create_app():
 
                 encounter_payload = openemr.build_kiosk_encounter_payload(
                     motivo_consulta=data.get("motivo_consulta"),
+                    professional_area=data.get("profesional_area"),
                 )
 
                 encounter_result = openemr.create_encounter_for_patient(
@@ -477,8 +478,8 @@ def create_app():
                 openemr = OpenEMRService()
                 encounter_payload = openemr.build_kiosk_encounter_payload(
                     motivo_consulta=motivo_consulta,
+                    professional_area=data.get("profesional_area"),
                 )
-
                 result = openemr.create_encounter_for_patient(
                     patient_uuid=patient_uuid,
                     encounter_data=encounter_payload,

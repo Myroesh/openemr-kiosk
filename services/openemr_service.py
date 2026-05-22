@@ -527,7 +527,12 @@ class OpenEMRService:
             "patients": matches,
         }
 
-    def build_kiosk_encounter_payload(self, motivo_consulta, encounter_date=None):
+    def build_kiosk_encounter_payload(
+        self,
+        motivo_consulta,
+        professional_area=None,
+        encounter_date=None,
+    ):
         """
         Construye el payload validado para crear encounter desde el kiosko.
 
@@ -547,6 +552,13 @@ class OpenEMRService:
             Config.OPENEMR_DEFAULT_PC_CATID,
         )
 
+        professional_area = str(professional_area or "").strip()
+
+        provider_id = Config.OPENEMR_PROVIDER_ID_MAP.get(
+            professional_area,
+            Config.OPENEMR_DEFAULT_PROVIDER_ID,
+        )
+
         return {
             "date": encounter_date,
             "onset_date": "",
@@ -559,7 +571,7 @@ class OpenEMRService:
             "referral_source": "",
             "pos_code": Config.OPENEMR_DEFAULT_POS_CODE,
             "external_id": "",
-            "provider_id": Config.OPENEMR_DEFAULT_PROVIDER_ID,
+            "provider_id": provider_id,
             "class_code": Config.OPENEMR_DEFAULT_CLASS_CODE,
         }
 

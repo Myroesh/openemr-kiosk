@@ -79,10 +79,11 @@ class Config:
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
     PROFESSIONALS = [
-        "Dra. Ana Maria Saavedra",
-        "Dra. Evelyn vidal",
-        "Dra. Katherine",
-        "Dr. Luis",
+    "Dra. Ana Saavedra",
+    "Dra. Evelyn Mejia Patiño",
+    "Dra. Katherine Oliveira",
+    "Dr. Jose Montaño",
+    "Dr. Hernan Hinojosa",
     ]
 
     KIOSK_DB_PATH = os.getenv("KIOSK_DB_PATH", "data/kiosk.db")
