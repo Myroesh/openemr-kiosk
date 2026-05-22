@@ -119,10 +119,74 @@
         {% endif %}
       </div>
 
-      <form method="post" action="/confirmar" class="actions">
-        <button class="btn" type="submit">Confirmar y crear paciente</button>
-        <a class="btn btn-secondary" href="/nuevo">Corregir datos</a>
-      </form>
+     <form id="confirmForm" method="post" action="/confirmar" class="actions">
+  <button id="openConfirmDialog" class="btn" type="button">
+    Confirmar y crear paciente
+  </button>
+  <a class="btn btn-secondary" href="/nuevo">Corregir datos</a>
+</form>
+
+<div id="confirmDialogBackdrop" class="confirm-dialog-backdrop" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
+    <h2 id="confirmDialogTitle">¿Los datos están correctos?</h2>
+    <p>
+      Revise que la información del paciente sea correcta antes de crear el registro en OpenEMR.
+    </p>
+
+    <div class="confirm-dialog-actions">
+      <button id="confirmYes" class="btn" type="button">
+        Sí, confirmar registro
+      </button>
+      <button id="confirmNo" class="btn btn-secondary" type="button">
+        No, revisar datos
+      </button>
+    </div>
+  </div>
+</div>
+
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const form = document.getElementById("confirmForm");
+          const openButton = document.getElementById("openConfirmDialog");
+          const backdrop = document.getElementById("confirmDialogBackdrop");
+          const yesButton = document.getElementById("confirmYes");
+          const noButton = document.getElementById("confirmNo");
+
+          function openDialog() {
+            backdrop.classList.add("is-open");
+            backdrop.setAttribute("aria-hidden", "false");
+            document.body.classList.add("dialog-open");
+            yesButton.focus();
+          }
+
+          function closeDialog() {
+            backdrop.classList.remove("is-open");
+            backdrop.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("dialog-open");
+            openButton.focus();
+          }
+
+          openButton.addEventListener("click", openDialog);
+
+          yesButton.addEventListener("click", function () {
+            form.submit();
+          });
+
+          noButton.addEventListener("click", closeDialog);
+
+          backdrop.addEventListener("click", function (event) {
+            if (event.target === backdrop) {
+              closeDialog();
+            }
+          });
+
+          document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && backdrop.classList.contains("is-open")) {
+              closeDialog();
+            }
+          });
+        });
+      </script>
     </section>
   </main>
 </body>
