@@ -21,6 +21,7 @@ from services.db_service import (
     create_kiosk_event,
     list_recent_events,
     list_recent_intakes,
+    claim_submission_token,
 )
 from services.validation_service import (
     validate_new_patient_data,
@@ -148,6 +149,7 @@ def create_app():
 
             session.pop("pending_intake_processing", None)
             session["pending_intake"] = data
+            session["pending_intake_token"] = secrets.token_urlsafe(32)
 
             create_kiosk_event(
                 event_type="pending_confirmation",
@@ -161,6 +163,7 @@ def create_app():
                     "padre_present": bool(data.get("padre_nombre")),
                     "madre_present": bool(data.get("madre_nombre")),
                     "profesional_area": data.get("profesional_area"),
+                    "submission_token_created": True,
                 },
             )
 
@@ -282,6 +285,7 @@ def create_app():
 
             session.pop("pending_existing_processing", None)
             session["pending_existing"] = data
+            session["pending_existing_token"] = secrets.token_urlsafe(32)
 
             create_kiosk_event(
                 event_type="existing_patient_found_pending_confirmation",
@@ -294,6 +298,7 @@ def create_app():
                     "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
                     "profesional_area": data.get("profesional_area"),
                     "motivo_consulta_present": bool(data.get("motivo_consulta")),
+                    "submission_token_created": True,
                 },
             )
 
@@ -314,15 +319,18 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
-            if session.get("pending_intake_processing"):
+            submission_token = session.get("pending_intake_token")
+
+            if not claim_submission_token(submission_token, "nuevo"):
                 create_kiosk_event(
                     event_type="new_patient_duplicate_submit_blocked",
                     flow_type="nuevo",
                     status="blocked",
-                    message="Intento duplicado de confirmar paciente nuevo bloqueado",
+                    message="Intento duplicado de confirmar paciente nuevo bloqueado por token server-side",
                     metadata={
                         "ci_documento_present": bool(data.get("ci_documento")),
                         "telefono_present": bool(data.get("telefono")),
+                        "submission_token_present": bool(submission_token),
                     },
                 )
 
@@ -416,10 +424,12 @@ def create_app():
                         "sexo_present": bool(data.get("sexo")),
                         "profesional_area": data.get("profesional_area"),
                         "motivo_consulta_present": bool(data.get("motivo_consulta")),
+                        "submission_token_present": bool(submission_token),
                     },
                 )
 
                 session.pop("pending_intake", None)
+                session.pop("pending_intake_token", None)
                 session.pop("pending_intake_processing", None)
 
                 return redirect(url_for("exito", intake_id=intake_id))
@@ -435,6 +445,7 @@ def create_app():
                         "ci_documento_present": bool(data.get("ci_documento")),
                         "telefono_present": bool(data.get("telefono")),
                         "sexo_present": bool(data.get("sexo")),
+                        "submission_token_present": bool(submission_token),
                     },
                 )
 
@@ -458,16 +469,19 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
-            if session.get("pending_existing_processing"):
+            submission_token = session.get("pending_existing_token")
+
+            if not claim_submission_token(submission_token, "antiguo"):
                 create_kiosk_event(
                     event_type="existing_patient_duplicate_submit_blocked",
                     flow_type="antiguo",
                     status="blocked",
-                    message="Intento duplicado de confirmar paciente antiguo bloqueado",
+                    message="Intento duplicado de confirmar paciente antiguo bloqueado por token server-side",
                     metadata={
                         "openemr_pid_present": bool(data.get("openemr_pid")),
                         "openemr_uuid_present": bool(data.get("openemr_uuid")),
                         "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
+                        "submission_token_present": bool(submission_token),
                     },
                 )
 
@@ -506,10 +520,12 @@ def create_app():
                         "encounter_uuid_present": bool(encounter_uuid),
                         "profesional_area": data.get("profesional_area"),
                         "motivo_consulta_present": bool(motivo_consulta),
+                        "submission_token_present": bool(submission_token),
                     },
                 )
 
                 session.pop("pending_existing", None)
+                session.pop("pending_existing_token", None)
                 session.pop("pending_existing_processing", None)
 
                 return redirect(url_for("exito"))
@@ -525,6 +541,7 @@ def create_app():
                         "openemr_uuid_present": bool(patient_uuid),
                         "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
                         "error": str(e),
+                        "submission_token_present": bool(submission_token),
                     },
                 )
 
