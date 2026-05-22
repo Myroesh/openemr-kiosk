@@ -1,6 +1,6 @@
 import secrets
-from functools import wraps
 from datetime import date
+from functools import wraps
 
 from flask import (
     Flask,
@@ -59,6 +59,7 @@ def admin_auth_required(view_func):
 
     return wrapper
 
+
 def patient_has_initial_encounter_today(encounters_result):
     """
     Verifica si el paciente ya tiene una Consulta Inicial creada hoy.
@@ -77,6 +78,13 @@ def patient_has_initial_encounter_today(encounters_result):
     if not isinstance(encounters, list):
         return False
 
+    initial_category_id = str(
+        Config.OPENEMR_VISIT_CATEGORY_MAP.get(
+            "Consulta Inicial",
+            Config.OPENEMR_DEFAULT_PC_CATID,
+        )
+    )
+
     for encounter in encounters:
         encounter_date = str(encounter.get("date") or "")
         encounter_reason = str(encounter.get("reason") or "").strip()
@@ -84,17 +92,13 @@ def patient_has_initial_encounter_today(encounters_result):
 
         same_day = encounter_date.startswith(today)
         is_initial_reason = encounter_reason == "Consulta Inicial"
-        is_initial_category = encounter_pc_catid == str(
-            Config.OPENEMR_VISIT_CATEGORY_MAP.get(
-                "Consulta Inicial",
-                Config.OPENEMR_DEFAULT_PC_CATID,
-            )
-        )
+        is_initial_category = encounter_pc_catid == initial_category_id
 
         if same_day and is_initial_reason and is_initial_category:
             return True
 
     return False
+
 
 def create_app():
     app = Flask(__name__)
@@ -425,16 +429,32 @@ def create_app():
                         "OpenEMR creó el paciente, pero no devolvió uuid para crear encounter."
                     )
 
-
-
-
-
                 encounter_payload = openemr.build_kiosk_encounter_payload(
                     motivo_consulta=data.get("motivo_consulta"),
                     professional_area=data.get("profesional_area"),
                 )
 
-                existing_encounters = openemr.get_patient_encounters(openemr_patient_uuid)
+                try:
+                    existing_encounters = openemr.get_patient_encounters(
+                        openemr_patient_uuid
+                    )
+                except OpenEMRServiceError as e:
+                    existing_encounters = {"data": []}
+
+                    create_kiosk_event(
+                        event_type="new_patient_initial_encounter_precheck_error",
+                        flow_type="nuevo",
+                        status="warning",
+                        message="No se pudo verificar encounters existentes; se continuará creando el encounter inicial",
+                        metadata={
+                            "error": str(e),
+                            "openemr_patient_id": openemr_patient_id,
+                            "openemr_patient_uuid_present": bool(openemr_patient_uuid),
+                            "profesional_area": data.get("profesional_area"),
+                            "motivo_consulta": data.get("motivo_consulta"),
+                            "submission_token_present": bool(submission_token),
+                        },
+                    )
 
                 if patient_has_initial_encounter_today(existing_encounters):
                     create_kiosk_event(
@@ -463,11 +483,6 @@ def create_app():
                     patient_uuid=openemr_patient_uuid,
                     encounter_data=encounter_payload,
                 )
-
-
-
-
-
 
                 encounter_result_data = (
                     encounter_result.get("data", {})
