@@ -63,6 +63,17 @@ def init_db():
             """
         )
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS kiosk_submission_locks (
+                token TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                flow_type TEXT NOT NULL,
+                status TEXT NOT NULL
+            )
+            """
+        )
+
         conn.commit()
 
 
@@ -202,3 +213,39 @@ def list_recent_intakes(limit=100):
         ).fetchall()
 
     return [dict(row) for row in rows]
+
+def claim_submission_token(token, flow_type):
+    """
+    Reclama un token de confirmación de forma atómica.
+
+    Devuelve True si este proceso logró reclamar el token.
+    Devuelve False si el token ya había sido usado.
+    """
+
+    if not token:
+        return False
+
+    try:
+        with get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO kiosk_submission_locks (
+                    token,
+                    created_at,
+                    flow_type,
+                    status
+                )
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    token,
+                    datetime.now().isoformat(timespec="seconds"),
+                    flow_type,
+                    "processing",
+                ),
+            )
+            conn.commit()
+            return True
+
+    except sqlite3.IntegrityError:
+        return False
