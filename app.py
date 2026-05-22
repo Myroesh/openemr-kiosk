@@ -315,6 +315,21 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
+            if session.get("pending_intake_processing"):
+                create_kiosk_event(
+                    event_type="new_patient_duplicate_submit_blocked",
+                    flow_type="nuevo",
+                    status="blocked",
+                    message="Intento duplicado de confirmar paciente nuevo bloqueado",
+                    metadata={
+                        "ci_documento_present": bool(data.get("ci_documento")),
+                        "telefono_present": bool(data.get("telefono")),
+                    },
+                )
+
+                return redirect(url_for("exito"))
+
+            session["pending_intake_processing"] = True
             try:
                 openemr = OpenEMRService()
 
@@ -402,6 +417,7 @@ def create_app():
                 )
 
                 session.pop("pending_intake", None)
+                session.pop("pending_intake_processing", None)
 
                 return redirect(url_for("exito", intake_id=intake_id))
 
@@ -418,7 +434,7 @@ def create_app():
                         "sexo_present": bool(data.get("sexo")),
                     },
                 )
-
+                session.pop("pending_intake_processing", None)
                 return render_template(
                     "confirmar.html",
                     data=data,
@@ -437,6 +453,23 @@ def create_app():
             return redirect(url_for("index"))
 
         if request.method == "POST":
+
+            if session.get("pending_existing_processing"):
+                create_kiosk_event(
+                    event_type="existing_patient_duplicate_submit_blocked",
+                    flow_type="antiguo",
+                    status="blocked",
+                    message="Intento duplicado de confirmar paciente antiguo bloqueado",
+                    metadata={
+                        "openemr_pid_present": bool(data.get("openemr_pid")),
+                        "openemr_uuid_present": bool(data.get("openemr_uuid")),
+                        "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
+                    },
+                )
+
+                return redirect(url_for("exito"))
+
+            session["pending_existing_processing"] = True
             patient_uuid = data.get("openemr_uuid")
             motivo_consulta = data.get("motivo_consulta")
 
@@ -474,6 +507,7 @@ def create_app():
                 session.pop("pending_existing", None)
 
                 return redirect(url_for("exito"))
+                session.pop("pending_existing_processing", None)
 
             except OpenEMRServiceError as e:
                 create_kiosk_event(
@@ -594,6 +628,7 @@ def create_app():
             })
 
         except OpenEMRServiceError as e:
+            session.pop("pending_existing_processing", None)
             return jsonify({
                 "status": "error",
                 "service": "openemr",
