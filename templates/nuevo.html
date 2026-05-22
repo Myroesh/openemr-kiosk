@@ -30,7 +30,22 @@
         <input name="apellidos" type="text" required value="{{ form.apellidos or '' }}">
 
         <label>Fecha de nacimiento</label>
-        <input name="fecha_nacimiento" type="date" required value="{{ form.fecha_nacimiento or '' }}">
+        <input
+          id="fecha_nacimiento"
+          name="fecha_nacimiento"
+          type="date"
+          required
+          value="{{ form.fecha_nacimiento or '' }}"
+        >
+
+        <input
+          id="es_menor"
+          name="es_menor"
+          type="hidden"
+          value="{{ 1 if form.es_menor else 0 }}"
+        >
+
+        <div id="minor_status" class="readonly-field" style="display: none;"></div>
 
         <label>Sexo</label>
         <select name="sexo" required>
@@ -63,33 +78,37 @@
           {% endfor %}
         </select>
 
-        <label>¿Es menor de edad?</label>
-        <select name="es_menor">
-          <option value="0" {% if not form.es_menor %}selected{% endif %}>No</option>
-          <option value="1" {% if form.es_menor %}selected{% endif %}>Sí</option>
-        </select>
+        <div id="guardian_section" style="display: none;">
+          <div class="section-subtitle">
+            Datos de padre, madre o tutor
+          </div>
 
-        <div class="section-subtitle">Datos del padre, si corresponde</div>
+          <p class="optional">
+            Para pacientes menores de edad, registre al menos el nombre del padre o de la madre.
+          </p>
 
-        <label>Nombre del padre <span class="optional">(opcional)</span></label>
-        <input name="padre_nombre" type="text" value="{{ form.padre_nombre or '' }}">
+          <div class="section-subtitle">Datos del padre</div>
 
-        <label>CI del padre <span class="optional">(opcional)</span></label>
-        <input name="padre_ci" type="text" inputmode="numeric" value="{{ form.padre_ci or '' }}">
+          <label>Nombre del padre <span class="optional">(obligatorio si no registra madre)</span></label>
+          <input name="padre_nombre" type="text" value="{{ form.padre_nombre or '' }}">
 
-        <label>Teléfono del padre <span class="optional">(opcional)</span></label>
-        <input name="padre_telefono" type="tel" value="{{ form.padre_telefono or '' }}">
+          <label>CI del padre <span class="optional">(opcional)</span></label>
+          <input name="padre_ci" type="text" inputmode="numeric" value="{{ form.padre_ci or '' }}">
 
-        <div class="section-subtitle">Datos de la madre, si corresponde</div>
+          <label>Teléfono del padre <span class="optional">(opcional)</span></label>
+          <input name="padre_telefono" type="tel" value="{{ form.padre_telefono or '' }}">
 
-        <label>Nombre de la madre <span class="optional">(opcional)</span></label>
-        <input name="madre_nombre" type="text" value="{{ form.madre_nombre or '' }}">
+          <div class="section-subtitle">Datos de la madre</div>
 
-        <label>CI de la madre <span class="optional">(opcional)</span></label>
-        <input name="madre_ci" type="text" inputmode="numeric" value="{{ form.madre_ci or '' }}">
+          <label>Nombre de la madre <span class="optional">(obligatorio si no registra padre)</span></label>
+          <input name="madre_nombre" type="text" value="{{ form.madre_nombre or '' }}">
 
-        <label>Teléfono de la madre <span class="optional">(opcional)</span></label>
-        <input name="madre_telefono" type="tel" value="{{ form.madre_telefono or '' }}">
+          <label>CI de la madre <span class="optional">(opcional)</span></label>
+          <input name="madre_ci" type="text" inputmode="numeric" value="{{ form.madre_ci or '' }}">
+
+          <label>Teléfono de la madre <span class="optional">(opcional)</span></label>
+          <input name="madre_telefono" type="tel" value="{{ form.madre_telefono or '' }}">
+        </div>
 
         <div class="actions">
           <button class="btn" type="submit">Continuar</button>
@@ -98,5 +117,68 @@
       </form>
     </section>
   </main>
+
+  <script>
+    function calculateAgeFromDateString(dateString) {
+      if (!dateString) {
+        return null;
+      }
+
+      const birthDate = new Date(dateString + "T00:00:00");
+      const today = new Date();
+
+      if (Number.isNaN(birthDate.getTime())) {
+        return null;
+      }
+
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age -= 1;
+      }
+
+      return age;
+    }
+
+    function updateMinorSection() {
+      const birthDateInput = document.getElementById("fecha_nacimiento");
+      const minorInput = document.getElementById("es_menor");
+      const minorStatus = document.getElementById("minor_status");
+      const guardianSection = document.getElementById("guardian_section");
+
+      const age = calculateAgeFromDateString(birthDateInput.value);
+
+      if (age === null || age < 0) {
+        minorInput.value = "0";
+        guardianSection.style.display = "none";
+        minorStatus.style.display = "none";
+        minorStatus.textContent = "";
+        return;
+      }
+
+      if (age < 18) {
+        minorInput.value = "1";
+        guardianSection.style.display = "block";
+        minorStatus.style.display = "block";
+        minorStatus.textContent = "Paciente menor de edad. Debe registrar al menos padre o madre.";
+      } else {
+        minorInput.value = "0";
+        guardianSection.style.display = "none";
+        minorStatus.style.display = "block";
+        minorStatus.textContent = "Paciente mayor de edad.";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const birthDateInput = document.getElementById("fecha_nacimiento");
+
+      birthDateInput.addEventListener("change", updateMinorSection);
+      birthDateInput.addEventListener("input", updateMinorSection);
+
+      updateMinorSection();
+    });
+  </script>
 </body>
 </html>

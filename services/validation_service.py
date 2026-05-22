@@ -17,6 +17,7 @@ ALLOWED_CONSULTATION_REASONS = (
     *EXISTING_PATIENT_CONSULTATION_REASONS,
 )
 
+
 def clean_spaces(value):
     if value is None:
         return ""
@@ -166,7 +167,7 @@ def validate_new_patient_data(raw_data, professionals):
         "direccion": normalize_text(raw_data.get("direccion")),
         "motivo_consulta": normalize_text(raw_data.get("motivo_consulta")),
         "profesional_area": clean_spaces(raw_data.get("profesional_area")),
-        "es_menor": 1 if str(raw_data.get("es_menor")) == "1" else 0,
+        "es_menor": 0,
         "padre_nombre": clean_name(raw_data.get("padre_nombre")),
         "padre_ci": normalize_ci(raw_data.get("padre_ci")),
         "padre_telefono": normalize_bolivian_mobile(raw_data.get("padre_telefono")),
@@ -186,19 +187,14 @@ def validate_new_patient_data(raw_data, professionals):
         errors.append(birth_error)
     else:
         age = calculate_age(birth_date)
-
-        if age < 18 and not data["es_menor"]:
-            errors.append("Por la edad registrada, debe marcar al paciente como menor de edad.")
-
-        if age >= 18 and data["es_menor"]:
-            errors.append("Por la edad registrada, el paciente no debería marcarse como menor de edad.")
+        data["es_menor"] = 1 if age < 18 else 0
 
     allowed_sex_values = ("Male", "Female", "Other")
     if not data["sexo"]:
         errors.append("Debe seleccionar el sexo del paciente.")
     elif data["sexo"] not in allowed_sex_values:
         errors.append("El sexo seleccionado no es válido.")
-    
+
     data["ci_documento"], ci_error = validate_ci_optional(data["ci_documento"])
     if ci_error:
         errors.append(ci_error)
