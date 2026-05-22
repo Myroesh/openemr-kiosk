@@ -238,6 +238,50 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 - [x] Pedir datos uno por uno o mediante formulario guiado.
   - Implementado por formulario `/nuevo`.
 
+  - [x] Automatizar detección de menor de edad en formulario de paciente nuevo.
+  - Confirmado: el selector manual de menor de edad fue eliminado.
+  - Confirmado: el frontend calcula la edad desde `fecha_nacimiento` y despliega automáticamente la sección de padre/madre si edad < 18.
+  - Confirmado: el backend recalcula `es_menor` desde `fecha_nacimiento`; no depende del valor enviado por JavaScript.
+  - Archivos actualizados:
+    - `templates/nuevo.html`
+    - `services/validation_service.py`
+
+- [x] Exigir datos mínimos de guardian para menores de edad.
+  - Confirmado: si el paciente es menor de edad, el backend exige al menos nombre del padre o nombre de la madre.
+  - Confirmado: los teléfonos de padre/madre son opcionales, pero si se llenan se validan como celulares bolivianos.
+  - Confirmado: CI de padre/madre es opcional, pero se valida si se llena.
+
+- [x] Mapear datos de padre/madre a campos guardian de OpenEMR.
+  - Confirmado: OpenEMR acepta `guardiansname`, `guardianrelationship` y `guardianphone` en `POST /apis/default/api/patient`.
+  - Confirmado: los datos se guardan en `patient_data`.
+  - Confirmado: los datos aparecen visualmente en la pestaña `Guardian` de Demographics.
+  - Decisión: no usar `mothersname` por ahora para evitar duplicidad visual.
+  - Regla de mapeo:
+    - Solo padre: `Padre: NOMBRE` en `guardiansname`, `Padre` en `guardianrelationship`, `Padre: TELEFONO` en `guardianphone`.
+    - Solo madre: `Madre: NOMBRE` en `guardiansname`, `Madre` en `guardianrelationship`, `Madre: TELEFONO` en `guardianphone`.
+    - Ambos: `Padre: X / Madre: Y`, `Padre/Madre`, `Padre: TEL / Madre: TEL`.
+
+- [x] Probar guardianes con ruta admin controlada.
+  - Ruta usada: `/admin/openemr/patient/test?confirm=CREATE`.
+  - Confirmado: paciente de prueba `Tutor TESTKIOSKO` fue creado con `pid = 42`.
+  - Confirmado por SQL:
+    - `guardiansname = Padre: Carlos Test Padre / Madre: Maria Test Madre`
+    - `guardianrelationship = Padre/Madre`
+    - `guardianphone = Padre: 71111111 / Madre: 72222222`
+    - `mothersname = vacío`
+
+- [x] Probar guardianes desde flujo real del kiosko.
+  - Ruta usada: `/nuevo` → `/confirmar`.
+  - Confirmado: paciente menor `Menor Guardiantest` fue creado con `pid = 43`.
+  - Confirmado: guardianes visibles en Demographics → Guardian.
+  - Confirmado: se creó encounter `Consulta Inicial`.
+  - Encounter confirmado:
+    - `encounter = 86`
+    - `provider_id = 5`
+    - `provider_name = Evelyn Mejia Patiño`
+    - `pc_catid = 16`
+    - `pc_catname = Consulta Inicial`
+
 - [x] Buscar duplicados antes de crear.
   - Confirmado: `/nuevo` consulta OpenEMR con `OpenEMRService.search_patients()` antes de permitir confirmación.
 

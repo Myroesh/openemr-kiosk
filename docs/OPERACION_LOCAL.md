@@ -677,6 +677,7 @@ registrar evento en kiosk_events
 /exito
 ```
 
+
 Confirmado:
 
 - No se crea paciente sin confirmación final.
@@ -684,6 +685,210 @@ Confirmado:
 - Se vuelve a validar antes de crear.
 - Si OpenEMR crea paciente pero no devuelve UUID, se bloquea la creación del encounter y se registra error.
 - Si la creación falla, se muestra mensaje seguro al usuario.
+
+---
+
+## Registro de menores de edad y datos de guardianes
+
+El formulario de paciente nuevo detecta automáticamente si el paciente es menor de edad usando la fecha de nacimiento.
+
+Regla actual:
+
+```text
+Si edad < 18:
+  es_menor = 1
+  se despliega automáticamente la sección de padre/madre/tutor
+  se exige al menos nombre del padre o nombre de la madre
+
+Si edad >= 18:
+  es_menor = 0
+  no se muestra la sección de padre/madre/tutor
+```
+
+La detección visual ocurre en:
+
+```text
+templates/nuevo.html
+```
+
+La validación real ocurre en backend, no en JavaScript:
+
+```text
+services/validation_service.py
+```
+
+Esto es importante porque el frontend solo ayuda a la experiencia de usuario. La decisión final de si el paciente es menor de edad se recalcula en backend a partir de `fecha_nacimiento`.
+
+### Datos obligatorios para menores
+
+Para pacientes menores de edad:
+
+```text
+Debe registrarse al menos:
+- nombre del padre
+  o
+- nombre de la madre
+```
+
+Los siguientes datos son opcionales, pero si se llenan deben ser válidos:
+
+```text
+CI del padre
+Teléfono del padre
+CI de la madre
+Teléfono de la madre
+```
+
+Los teléfonos se validan como celulares bolivianos de 8 dígitos, comenzando en 6 o 7.
+
+### Mapeo de guardianes hacia OpenEMR
+
+Los datos de padre/madre se envían a OpenEMR usando los campos estándar de guardian en `patient_data`.
+
+Campos usados:
+
+```text
+guardiansname
+guardianrelationship
+guardianphone
+```
+
+No se usa `mothersname` en este flujo para evitar duplicidad visual cuando ya se registra la madre dentro de `guardiansname`.
+
+Regla de mapeo:
+
+```text
+Si solo hay padre:
+  guardiansname = Padre: NOMBRE_PADRE
+  guardianrelationship = Padre
+  guardianphone = Padre: TELEFONO_PADRE
+
+Si solo hay madre:
+  guardiansname = Madre: NOMBRE_MADRE
+  guardianrelationship = Madre
+  guardianphone = Madre: TELEFONO_MADRE
+
+Si hay padre y madre:
+  guardiansname = Padre: NOMBRE_PADRE / Madre: NOMBRE_MADRE
+  guardianrelationship = Padre/Madre
+  guardianphone = Padre: TELEFONO_PADRE / Madre: TELEFONO_MADRE
+```
+
+Ejemplo confirmado:
+
+```text
+guardiansname = Padre: Roberto Guardian / Madre: Maria Guardian
+guardianrelationship = Padre/Madre
+guardianphone = Padre: 71112222 / Madre: 72223333
+mothersname = vacío
+```
+
+### Prueba real confirmada
+
+Se probó desde el flujo real del kiosko:
+
+```text
+/nuevo
+↓
+detección automática de menor de edad
+↓
+registro de padre y madre
+↓
+/confirmar
+↓
+creación de paciente en OpenEMR
+↓
+creación de Consulta Inicial
+```
+
+Resultado confirmado en OpenEMR:
+
+```text
+PID: 43
+Paciente: Menor Guardiantest
+DOB: 2009-02-02
+Edad mostrada en OpenEMR: 17
+```
+
+Datos guardian guardados:
+
+```text
+guardiansname: Padre: Roberto Guardian / Madre: Maria Guardian
+guardianrelationship: Padre/Madre
+guardianphone: Padre: 71112222 / Madre: 72223333
+mothersname: vacío
+```
+
+Encounter creado:
+
+```text
+encounter: 86
+reason: Consulta Inicial
+provider_id: 5
+provider_name: Evelyn Mejia Patiño
+pc_catid: 16
+pc_catname: Consulta Inicial
+```
+
+### Verificación SQL
+
+Ver datos guardian de un paciente:
+
+```bash
+sudo mysql openemr -e "
+SELECT
+  pid,
+  fname,
+  lname,
+  DOB,
+  guardiansname,
+  guardianrelationship,
+  guardianphone,
+  mothersname
+FROM patient_data
+WHERE pid = PID_AQUI;
+"
+```
+
+Ver encounter del paciente:
+
+```bash
+sudo mysql openemr -e "
+SELECT
+  fe.pid,
+  fe.encounter,
+  fe.date,
+  fe.reason,
+  fe.provider_id,
+  CONCAT(u.fname, ' ', u.lname) AS provider_name,
+  fe.pc_catid,
+  c.pc_catname
+FROM form_encounter fe
+LEFT JOIN users u
+  ON u.id = fe.provider_id
+LEFT JOIN openemr_postcalendar_categories c
+  ON c.pc_catid = fe.pc_catid
+WHERE fe.pid = PID_AQUI
+ORDER BY fe.encounter ASC;
+"
+```
+
+Reemplazar:
+
+```text
+PID_AQUI
+```
+
+por el número real del paciente.
+
+### Archivos relacionados
+
+```text
+templates/nuevo.html
+services/validation_service.py
+services/openemr_service.py
+templates/confirmar.html
+```
 
 ---
 

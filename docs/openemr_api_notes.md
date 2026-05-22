@@ -335,6 +335,259 @@ El formulario `/nuevo` incluye campo `sexo` con valores:
 
 ---
 
+---
+
+## Payload confirmado para guardianes de menores
+
+Endpoint:
+
+```text
+POST /apis/default/api/patient
+```
+
+Se confirmó que OpenEMR acepta y guarda correctamente los siguientes campos de guardian dentro del payload de creación de paciente:
+
+```text
+guardiansname
+guardianrelationship
+guardianphone
+```
+
+Estos campos existen en la tabla:
+
+```text
+patient_data
+```
+
+Consulta usada para verificar columnas:
+
+```bash
+sudo mysql openemr -e "
+SHOW COLUMNS FROM patient_data
+LIKE '%guardian%';
+"
+```
+
+Columnas relevantes confirmadas:
+
+```text
+guardiansname
+guardianrelationship
+guardiansex
+guardianaddress
+guardiancity
+guardianstate
+guardianpostalcode
+guardiancountry
+guardianphone
+guardianworkphone
+guardianemail
+```
+
+También existe:
+
+```text
+mothersname
+```
+
+pero no se usa en el flujo actual para evitar duplicar visualmente el dato de la madre cuando se registra dentro del campo `guardiansname`.
+
+### Regla de mapeo del kiosko
+
+El kiosko usa los campos guardian como referencia clínica visible para los doctores.
+
+Regla actual:
+
+```text
+Si solo hay padre:
+  guardiansname = Padre: NOMBRE_PADRE
+  guardianrelationship = Padre
+  guardianphone = Padre: TELEFONO_PADRE
+
+Si solo hay madre:
+  guardiansname = Madre: NOMBRE_MADRE
+  guardianrelationship = Madre
+  guardianphone = Madre: TELEFONO_MADRE
+
+Si hay padre y madre:
+  guardiansname = Padre: NOMBRE_PADRE / Madre: NOMBRE_MADRE
+  guardianrelationship = Padre/Madre
+  guardianphone = Padre: TELEFONO_PADRE / Madre: TELEFONO_MADRE
+```
+
+### Payload dry-run confirmado
+
+Ruta admin del kiosko usada:
+
+```text
+POST /admin/openemr/patient/test
+```
+
+Payload recibido por el kiosko:
+
+```json
+{
+  "nombres": "Tutor",
+  "apellidos": "TESTKIOSKO",
+  "fecha_nacimiento": "2015-01-01",
+  "sexo": "Male",
+  "telefono": "70707070",
+  "direccion": "Prueba guardian",
+  "es_menor": 1,
+  "padre_nombre": "Carlos Test Padre",
+  "padre_telefono": "71111111",
+  "madre_nombre": "Maria Test Madre",
+  "madre_telefono": "72222222"
+}
+```
+
+Payload generado hacia OpenEMR:
+
+```json
+{
+  "title": "",
+  "fname": "Tutor",
+  "mname": "",
+  "lname": "TESTKIOSKO",
+  "street": "Prueba guardian",
+  "postal_code": "",
+  "city": "",
+  "state": "",
+  "country_code": "BO",
+  "phone_contact": "70707070",
+  "DOB": "2015-01-01",
+  "sex": "Male",
+  "race": "",
+  "ethnicity": "",
+  "guardiansname": "Padre: Carlos Test Padre / Madre: Maria Test Madre",
+  "guardianrelationship": "Padre/Madre",
+  "guardianphone": "Padre: 71111111 / Madre: 72222222"
+}
+```
+
+### Prueba real confirmada por API
+
+Ruta usada:
+
+```text
+POST /admin/openemr/patient/test?confirm=CREATE
+```
+
+Respuesta confirmada:
+
+```json
+{
+  "message": "Paciente creado en OpenEMR.",
+  "result": {
+    "data": {
+      "pid": 42,
+      "uuid": "a1d770cf-fab2-46fa-85a4-b76b8a33aea2"
+    },
+    "internalErrors": [],
+    "links": [],
+    "validationErrors": []
+  },
+  "service": "openemr",
+  "status": "ok"
+}
+```
+
+Verificación SQL:
+
+```bash
+sudo mysql openemr -e "
+SELECT
+  pid,
+  fname,
+  lname,
+  DOB,
+  guardiansname,
+  guardianrelationship,
+  guardianphone,
+  mothersname
+FROM patient_data
+WHERE lname = 'TESTKIOSKO'
+ORDER BY pid DESC
+LIMIT 5;
+"
+```
+
+Resultado confirmado:
+
+```text
+pid: 42
+fname: Tutor
+lname: TESTKIOSKO
+DOB: 2015-01-01
+guardiansname: Padre: Carlos Test Padre / Madre: Maria Test Madre
+guardianrelationship: Padre/Madre
+guardianphone: Padre: 71111111 / Madre: 72222222
+mothersname: vacío
+```
+
+### Prueba real desde flujo del kiosko
+
+También se confirmó desde el flujo real:
+
+```text
+/nuevo
+/confirmar
+```
+
+Paciente creado:
+
+```text
+PID: 43
+Paciente: Menor Guardiantest
+DOB: 2009-02-02
+```
+
+Guardianes guardados:
+
+```text
+guardiansname: Padre: Roberto Guardian / Madre: Maria Guardian
+guardianrelationship: Padre/Madre
+guardianphone: Padre: 71112222 / Madre: 72223333
+mothersname: vacío
+```
+
+Encounter creado:
+
+```text
+encounter: 86
+reason: Consulta Inicial
+provider_id: 5
+provider_name: Evelyn Mejia Patiño
+pc_catid: 16
+pc_catname: Consulta Inicial
+```
+
+### Implementación en código
+
+La construcción del payload guardian se realiza en:
+
+```text
+services/openemr_service.py
+```
+
+Función:
+
+```text
+build_kiosk_guardian_payload()
+```
+
+El payload principal se arma en:
+
+```text
+build_kiosk_patient_payload()
+```
+
+y luego agrega los campos guardian mediante:
+
+```text
+payload.update(self.build_kiosk_guardian_payload(patient_data))
+```
+
 ## Payload confirmado para crear encounter
 
 Endpoint:
