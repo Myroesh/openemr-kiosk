@@ -1024,6 +1024,140 @@ existing_patient_encounter_created
 
 Si hay cero o múltiples coincidencias, el sistema debe bloquear el flujo y pedir ayuda en recepción.
 
+
+## 29. Observación crítica: no eliminar pacientes de prueba durante validaciones
+
+Durante las pruebas del kiosko se observó un comportamiento importante de OpenEMR:
+
+Si se elimina un paciente desde la interfaz de OpenEMR y luego se registra un nuevo paciente desde el kiosko, OpenEMR puede reutilizar el mismo `pid`.
+
+En la prueba realizada:
+
+```text
+PID original: 41
+Paciente original: Jheremy Valencia
+Encounter asociado: 84 - Consulta Inicial
+```
+
+Luego de eliminar ese paciente desde OpenEMR y registrar un nuevo paciente desde el kiosko:
+
+```text
+Nuevo paciente: James Jameson
+PID asignado: 41
+```
+
+OpenEMR reutilizó el mismo `pid = 41`.
+
+El encounter anterior permaneció asociado a ese `pid` en `form_encounter`, por lo que el nuevo paciente puede heredar visualmente encounters del paciente eliminado.
+
+Conclusión operativa:
+
+```text
+No eliminar pacientes de prueba desde OpenEMR durante validaciones del kiosko.
+```
+
+Para pruebas funcionales, usar una convención de nombres/apellidos identificables y conservar esos registros hasta terminar la validación.
+
+Ejemplo recomendado:
+
+```text
+Nombre: Prueba Uno
+Apellido: TESTKIOSKO
+```
+
+o:
+
+```text
+Apellido: KIOSKO_TEST
+```
+
+Esto permite filtrar fácilmente los pacientes de prueba sin contaminar relaciones internas por reutilización de `pid`.
+
+### Comportamiento actual del kiosko ante este caso
+
+El kiosko tiene una protección para no duplicar `Consulta Inicial` si detecta que el paciente devuelto por OpenEMR ya tiene una consulta inicial creada el mismo día.
+
+Evento esperado en logs si se detecta esa condición:
+
+```text
+new_patient_initial_encounter_already_exists
+```
+
+Esto significa:
+
+```text
+El kiosko no creó un nuevo encounter inicial porque OpenEMR ya mostraba una Consulta Inicial para ese pid en la fecha actual.
+```
+
+También puede aparecer:
+
+```text
+new_patient_initial_encounter_precheck_error
+```
+
+Esto significa:
+
+```text
+OpenEMR respondió error al consultar encounters existentes, normalmente HTTP 404 con data vacía cuando el paciente todavía no tiene encounters.
+```
+
+Este evento no es fatal. En ese caso, el kiosko continúa y crea el encounter inicial.
+
+### Verificación SQL útil
+
+Ver últimos pacientes creados:
+
+```bash
+sudo mysql openemr -e "
+SELECT pid, pubpid, fname, lname, DOB, date, regdate
+FROM patient_data
+ORDER BY pid DESC
+LIMIT 5;
+"
+```
+
+Ver encounters de un paciente:
+
+```bash
+sudo mysql openemr -e "
+SELECT
+  fe.pid,
+  fe.encounter,
+  fe.date,
+  fe.reason,
+  fe.provider_id,
+  CONCAT(u.fname, ' ', u.lname) AS provider_name,
+  fe.pc_catid,
+  c.pc_catname
+FROM form_encounter fe
+LEFT JOIN users u
+  ON u.id = fe.provider_id
+LEFT JOIN openemr_postcalendar_categories c
+  ON c.pc_catid = fe.pc_catid
+WHERE fe.pid = PID_AQUI
+ORDER BY fe.encounter ASC;
+"
+```
+
+Reemplazar:
+
+```text
+PID_AQUI
+```
+
+por el número real del paciente.
+
+### Regla de pruebas
+
+Para validar el kiosko:
+
+```text
+Crear pacientes nuevos únicos.
+No eliminarlos durante la tanda de pruebas.
+Usar apellido TESTKIOSKO o KIOSKO_TEST.
+Revisar encounters por SQL o desde Visit History.
+```
+
 ---
 
 ## 29. Probar renovación real de token

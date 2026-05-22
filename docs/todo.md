@@ -316,6 +316,15 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 - [x] Confirmar que no se crean datos sin confirmación.
   - Confirmado: creación de paciente y encounters ocurre después de pantalla de confirmación.
+  - [x] Probar caso de eliminación de paciente de prueba en OpenEMR y reutilización de PID.
+  - Confirmado: al eliminar un paciente desde OpenEMR y crear uno nuevo desde el kiosko, OpenEMR puede reutilizar el mismo `pid`.
+  - Confirmado: los encounters previos asociados a ese `pid` pueden seguir visibles para el nuevo paciente.
+  - Conclusión: este comportamiento pertenece a OpenEMR/operación de pruebas, no al flujo normal del kiosko.
+  - Acción: documentado en `docs/OPERACION_LOCAL.md`.
+
+- [x] Probar que el kiosko no duplique `Consulta Inicial` cuando OpenEMR devuelve un paciente con encounter inicial existente.
+  - Confirmado: el kiosko registra `new_patient_initial_encounter_already_exists` y no crea otro encounter inicial.
+
 ---
 
 ## Fase 10 - Despliegue local estable
@@ -338,13 +347,13 @@ Primero resolver recepción básica. Luego mejorar IA, voz, agenda, reportes o i
 
 ## Fase 11 - Documentación operativa
 
-- [ ] Documentar cómo iniciar/detener el kiosko.
-- [ ] Documentar cómo revisar logs.
-- [ ] Documentar cómo actualizar código desde GitHub.
-- [ ] Documentar qué hacer si OpenEMR API falla.
-- [ ] Documentar qué hacer si Gemini falla.
+- [x] Documentar cómo iniciar/detener el kiosko.
+- [x] Documentar cómo revisar logs.
+- [x] Documentar cómo actualizar código desde GitHub.
+- [x] Documentar qué hacer si OpenEMR API falla.
+- [x] Documentar qué hacer si Gemini falla.
+- [x] Documentar observación operativa sobre eliminación de pacientes de prueba y reutilización de `pid` en OpenEMR.
 - [ ] Crear checklist de uso para el personal del centro.
-
 ---
 
 # Siguiente bloque de trabajo recomendado según documento base
