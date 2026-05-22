@@ -623,6 +623,62 @@ class OpenEMRService:
             json=encounter_data,
         )
 
+    def build_kiosk_guardian_payload(self, patient_data):
+        """
+        Construye campos guardian para OpenEMR patient_data.
+
+        Regla operativa:
+        - Si solo hay padre: guardar padre como guardian.
+        - Si solo hay madre: guardar madre como guardian.
+        - Si hay ambos: guardar ambos en campos combinados para referencia clínica.
+        - No usar mothersname para evitar redundancia visual.
+        """
+
+        if not isinstance(patient_data, dict):
+            return {}
+
+        is_minor = bool(patient_data.get("es_menor"))
+
+        if not is_minor:
+            return {}
+
+        padre_nombre = str(patient_data.get("padre_nombre") or "").strip()
+        padre_telefono = str(patient_data.get("padre_telefono") or "").strip()
+        madre_nombre = str(patient_data.get("madre_nombre") or "").strip()
+        madre_telefono = str(patient_data.get("madre_telefono") or "").strip()
+
+        guardian_names = []
+        guardian_phones = []
+        relationships = []
+
+        if padre_nombre:
+            guardian_names.append(f"Padre: {padre_nombre}")
+            relationships.append("Padre")
+
+        if madre_nombre:
+            guardian_names.append(f"Madre: {madre_nombre}")
+            relationships.append("Madre")
+
+        if padre_telefono:
+            guardian_phones.append(f"Padre: {padre_telefono}")
+
+        if madre_telefono:
+            guardian_phones.append(f"Madre: {madre_telefono}")
+
+        payload = {}
+
+        if guardian_names:
+            payload["guardiansname"] = " / ".join(guardian_names)
+
+        if relationships:
+            payload["guardianrelationship"] = "/".join(relationships)
+
+        if guardian_phones:
+            payload["guardianphone"] = " / ".join(guardian_phones)
+
+        return payload
+
+
     def build_kiosk_patient_payload(self, patient_data):
         """
         Construye el payload para crear paciente en OpenEMR.
@@ -656,7 +712,7 @@ class OpenEMRService:
         if not sexo:
             raise OpenEMRConfigError("sexo es obligatorio para crear paciente.")
             
-        return {
+        payload = {
             "title": "",
             "fname": nombres,
             "mname": "",
@@ -672,6 +728,10 @@ class OpenEMRService:
             "race": "",
             "ethnicity": "",
         }
+
+        payload.update(self.build_kiosk_guardian_payload(patient_data))
+
+        return payload
 
     def create_patient(self, patient_data):
         """
