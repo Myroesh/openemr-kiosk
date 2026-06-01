@@ -70,12 +70,21 @@
               </p>
             </div>
 
-            <form method="post" action="/doctor/queue/{{ next_patient.id }}/start">
-              <input type="hidden" name="next" value="{{ request.full_path }}">
-              <button class="btn" type="submit">
-                Marcar como en atención
-              </button>
-            </form>
+            <div class="queue-actions">
+              <form method="post" action="/doctor/queue/{{ next_patient.id }}/start">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <button class="btn" type="submit">
+                  Marcar como en atención
+                </button>
+              </form>
+
+              <form method="post" action="/doctor/queue/{{ next_patient.id }}/cancel">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <button class="btn btn-danger-soft" type="submit">
+                  Cancelar
+                </button>
+              </form>
+            </div>
           </article>
         {% else %}
           <p class="empty-state">
@@ -103,12 +112,21 @@
                   </p>
                 </div>
 
-                <form method="post" action="/doctor/queue/{{ patient.id }}/start">
-                  <input type="hidden" name="next" value="{{ request.full_path }}">
-                  <button class="btn btn-small" type="submit">
-                    En atención
-                  </button>
-                </form>
+                <div class="queue-actions">
+                  <form method="post" action="/doctor/queue/{{ patient.id }}/start">
+                    <input type="hidden" name="next" value="{{ request.full_path }}">
+                    <button class="btn btn-small" type="submit">
+                      En atención
+                    </button>
+                  </form>
+
+                  <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
+                    <input type="hidden" name="next" value="{{ request.full_path }}">
+                    <button class="btn btn-small btn-danger-soft" type="submit">
+                      Cancelar
+                    </button>
+                  </form>
+                </div>
               </article>
             {% endfor %}
           {% else %}
@@ -134,12 +152,21 @@
                   </p>
                 </div>
 
-                <form method="post" action="/doctor/queue/{{ patient.id }}/complete">
-                  <input type="hidden" name="next" value="{{ request.full_path }}">
-                  <button class="btn btn-small" type="submit">
-                    Atendido
-                  </button>
-                </form>
+                <div class="queue-actions">
+                  <form method="post" action="/doctor/queue/{{ patient.id }}/complete">
+                    <input type="hidden" name="next" value="{{ request.full_path }}">
+                    <button class="btn btn-small" type="submit">
+                      Atendido
+                    </button>
+                  </form>
+
+                  <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
+                    <input type="hidden" name="next" value="{{ request.full_path }}">
+                    <button class="btn btn-small btn-danger-soft" type="submit">
+                      Cancelar
+                    </button>
+                  </form>
+                </div>
               </article>
             {% endfor %}
           {% else %}

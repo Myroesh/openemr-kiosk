@@ -62,6 +62,29 @@ def admin_auth_required(view_func):
 
     return wrapper
 
+def check_doctor_auth(username, password):
+    return (
+        username == Config.DOCTOR_USERNAME
+        and Config.DOCTOR_PASSWORD
+        and password == Config.DOCTOR_PASSWORD
+    )
+
+
+def doctor_auth_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        auth = request.authorization
+
+        if not auth or not check_doctor_auth(auth.username, auth.password):
+            return Response(
+                "Acceso restringido al portal médico.",
+                401,
+                {"WWW-Authenticate": 'Basic realm="OpenEMR Doctor Portal"'},
+            )
+
+        return view_func(*args, **kwargs)
+
+    return wrapper
 
 def patient_has_initial_encounter_today(encounters_result):
     """
@@ -871,6 +894,7 @@ def create_app():
         return render_template("confirmar_antiguo.html", data=data, errors=[])
 
     @app.route("/doctor/dashboard")
+    @doctor_auth_required
     def doctor_dashboard():
         selected_date = request.args.get("date") or date.today().isoformat()
         selected_doctor = request.args.get("doctor") or ""
@@ -893,6 +917,7 @@ def create_app():
         )
 
     @app.route("/doctor/queue/<int:queue_id>/start", methods=["POST"])
+    @doctor_auth_required
     def doctor_queue_start(queue_id):
         updated = update_patient_queue_status(queue_id, "in_progress")
 
@@ -908,6 +933,7 @@ def create_app():
         return redirect(get_doctor_dashboard_redirect())
 
     @app.route("/doctor/queue/<int:queue_id>/complete", methods=["POST"])
+    @doctor_auth_required
     def doctor_queue_complete(queue_id):
         updated = update_patient_queue_status(queue_id, "completed")
 
@@ -923,6 +949,7 @@ def create_app():
         return redirect(get_doctor_dashboard_redirect())
 
     @app.route("/doctor/queue/<int:queue_id>/cancel", methods=["POST"])
+    @doctor_auth_required
     def doctor_queue_cancel(queue_id):
         updated = update_patient_queue_status(queue_id, "cancelled")
 
