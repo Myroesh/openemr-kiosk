@@ -12,3 +12,4 @@ venv/
 logs/
 *.log
 .DS_Store
+data/openemr_tokens.json
