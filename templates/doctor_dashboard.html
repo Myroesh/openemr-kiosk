@@ -66,7 +66,7 @@
               </p>
               <p class="doctor-meta">
                 Profesional: {{ next_patient.doctor_name or "Sin asignar" }} ·
-                Llegada: {{ next_patient.created_at }}
+                Llegada: {{ next_patient.created_at_display }}
               </p>
             </div>
 
@@ -84,6 +84,17 @@
                   Cancelar
                 </button>
               </form>
+
+              {% if next_patient.openemr_patient_url %}
+                <a
+                  class="btn btn-secondary btn-openemr"
+                  href="{{ next_patient.openemr_patient_url }}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Abrir en OpenEMR
+                </a>
+              {% endif %}
             </div>
           </article>
         {% else %}
@@ -108,7 +119,7 @@
                   <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
                   <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
                   <p class="doctor-meta">
-                    {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at }}
+                    {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
                   </p>
                 </div>
 
@@ -126,6 +137,17 @@
                       Cancelar
                     </button>
                   </form>
+
+                  {% if patient.openemr_patient_url %}
+                    <a
+                      class="btn btn-secondary btn-small btn-openemr"
+                      href="{{ patient.openemr_patient_url }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      OpenEMR
+                    </a>
+                  {% endif %}
                 </div>
               </article>
             {% endfor %}
@@ -148,7 +170,7 @@
                   <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
                   <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
                   <p class="doctor-meta">
-                    Inicio: {{ patient.started_at or "Sin hora" }}
+                    Inicio: {{ patient.started_at_display }}
                   </p>
                 </div>
 
@@ -166,6 +188,17 @@
                       Cancelar
                     </button>
                   </form>
+
+                  {% if patient.openemr_patient_url %}
+                    <a
+                      class="btn btn-secondary btn-small btn-openemr"
+                      href="{{ patient.openemr_patient_url }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      OpenEMR
+                    </a>
+                  {% endif %}
                 </div>
               </article>
             {% endfor %}
@@ -188,8 +221,19 @@
                   <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
                   <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
                   <p class="doctor-meta">
-                    Finalizado: {{ patient.finished_at or "Sin hora" }}
+                    Finalizado: {{ patient.finished_at_display }}
                   </p>
+
+                  {% if patient.openemr_patient_url %}
+                    <a
+                      class="small-link doctor-openemr-link"
+                      href="{{ patient.openemr_patient_url }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Abrir en OpenEMR
+                    </a>
+                  {% endif %}
                 </div>
               </article>
             {% endfor %}
@@ -215,8 +259,19 @@
                 <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
                 <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
                 <p class="doctor-meta">
-                  {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at }}
+                  {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
                 </p>
+
+                {% if patient.openemr_patient_url %}
+                  <a
+                    class="small-link doctor-openemr-link"
+                    href="{{ patient.openemr_patient_url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir en OpenEMR
+                  </a>
+                {% endif %}
               </div>
             </article>
           {% endfor %}

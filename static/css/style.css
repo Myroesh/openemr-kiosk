@@ -715,3 +715,28 @@ body.dialog-open {
     grid-template-columns: 1fr;
   }
 }
+.queue-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.btn-danger-soft {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-dark);
+  border: 1px solid #f5b8c0;
+  box-shadow: none;
+}
+
+.btn-danger-soft:hover {
+  box-shadow: 0 10px 22px rgba(196, 61, 75, 0.10);
+}
+.btn-openemr {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doctor-openemr-link {
+  display: inline-block;
+  margin-top: 10px;
+}

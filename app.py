@@ -1,5 +1,5 @@
 import secrets
-from datetime import date
+from datetime import date, datetime
 from functools import wraps
 
 from flask import (
@@ -230,6 +230,52 @@ def get_doctor_dashboard_redirect():
         return url_for("doctor_dashboard")
 
     return next_url
+
+def format_dashboard_datetime(value):
+    if not value:
+        return "Sin hora"
+
+    try:
+        parsed = datetime.fromisoformat(str(value))
+        return parsed.strftime("%d/%m/%Y %H:%M")
+    except ValueError:
+        return str(value)
+
+
+def build_openemr_patient_url(openemr_pid):
+    if not openemr_pid:
+        return None
+
+    template = str(Config.OPENEMR_PATIENT_LINK_TEMPLATE or "").strip()
+
+    if not template:
+        return None
+
+    return template.format(pid=openemr_pid)
+
+
+def prepare_doctor_queue_rows(rows):
+    prepared_rows = []
+
+    for row in rows:
+        prepared = dict(row)
+
+        prepared["created_at_display"] = format_dashboard_datetime(
+            prepared.get("created_at")
+        )
+        prepared["started_at_display"] = format_dashboard_datetime(
+            prepared.get("started_at")
+        )
+        prepared["finished_at_display"] = format_dashboard_datetime(
+            prepared.get("finished_at")
+        )
+        prepared["openemr_patient_url"] = build_openemr_patient_url(
+            prepared.get("openemr_pid")
+        )
+
+        prepared_rows.append(prepared)
+
+    return prepared_rows
 
 def create_app():
     app = Flask(__name__)
@@ -900,10 +946,11 @@ def create_app():
         selected_doctor = request.args.get("doctor") or ""
 
         rows = list_patient_queue_by_date(queue_date=selected_date)
+        rows = prepare_doctor_queue_rows(rows)
         rows = filter_queue_rows_by_doctor(rows, selected_doctor)
 
         queue = split_doctor_queue(rows)
-
+        
         return render_template(
             "doctor_dashboard.html",
             selected_date=selected_date,

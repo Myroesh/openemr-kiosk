@@ -12,6 +12,10 @@ class Config:
     GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
     OPENEMR_BASE_URL = os.getenv("OPENEMR_BASE_URL")
+    OPENEMR_PATIENT_LINK_TEMPLATE = os.getenv(
+        "OPENEMR_PATIENT_LINK_TEMPLATE",
+        "",
+    )
     OPENEMR_SITE = os.getenv("OPENEMR_SITE", "default")
     OPENEMR_CLIENT_ID = os.getenv("OPENEMR_CLIENT_ID")
     OPENEMR_CLIENT_SECRET = os.getenv("OPENEMR_CLIENT_SECRET")
