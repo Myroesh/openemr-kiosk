@@ -13,3 +13,5 @@ logs/
 *.log
 .DS_Store
 data/openemr_tokens.json
+data/openemr_tokens.json
+data/*.json
