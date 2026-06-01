@@ -19,6 +19,7 @@ from services.openemr_service import OpenEMRService, OpenEMRServiceError
 from services.db_service import (
     init_db,
     create_patient_intake,
+    create_patient_queue_entry,
     create_kiosk_event,
     list_recent_events,
     list_recent_intakes,
@@ -99,6 +100,63 @@ def patient_has_initial_encounter_today(encounters_result):
 
     return False
 
+def get_queue_doctor_identity(professional_name):
+    """
+    Devuelve doctor_id y doctor_name para patient_queue.
+
+    Por ahora usamos el provider_id configurado en OPENEMR_PROVIDER_ID_MAP
+    como doctor_id, y el nombre seleccionado en el formulario como doctor_name.
+    """
+
+    normalized_name = str(professional_name or "").strip()
+
+    if not normalized_name:
+        return "sin-asignar", "Sin asignar"
+
+    doctor_id = Config.OPENEMR_PROVIDER_ID_MAP.get(normalized_name)
+
+    return str(doctor_id or normalized_name), normalized_name
+
+
+def build_new_patient_queue_name(data):
+    names = [
+        str(data.get("nombres") or "").strip(),
+        str(data.get("apellidos") or "").strip(),
+    ]
+
+    patient_name = " ".join(part for part in names if part).strip()
+
+    return patient_name or "Paciente nuevo"
+
+
+def build_existing_patient_queue_name(data):
+    patient = data.get("openemr_patient") or {}
+
+    possible_names = [
+        str(patient.get("fname") or "").strip(),
+        str(patient.get("mname") or "").strip(),
+        str(patient.get("lname") or "").strip(),
+    ]
+
+    patient_name = " ".join(part for part in possible_names if part).strip()
+
+    if patient_name:
+        return patient_name
+
+    fallback_values = [
+        data.get("nombre"),
+        patient.get("name"),
+        patient.get("pubpid"),
+        data.get("openemr_pubpid"),
+        data.get("openemr_pid"),
+    ]
+
+    for value in fallback_values:
+        normalized = str(value or "").strip()
+        if normalized:
+            return normalized
+
+    return "Paciente antiguo"
 
 def create_app():
     app = Flask(__name__)
@@ -473,6 +531,46 @@ def create_app():
 
                     intake_id = create_patient_intake(data)
 
+                    doctor_id, doctor_name = get_queue_doctor_identity(
+                        data.get("profesional_area")
+                    )
+
+                    queue_id = create_patient_queue_entry(
+                        openemr_pid=openemr_patient_id,
+                        openemr_puuid=openemr_patient_uuid,
+                        openemr_encounter_id=None,
+                        patient_name=build_new_patient_queue_name(data),
+                        doctor_id=doctor_id,
+                        doctor_name=doctor_name,
+                        visit_reason=data.get("motivo_consulta"),
+                        status="pending",
+                        metadata={
+                            "flow_type": "nuevo",
+                            "intake_id": intake_id,
+                            "encounter_creation_skipped": True,
+                            "reason": "initial_encounter_already_exists_today",
+                            "profesional_area": data.get("profesional_area"),
+                        },
+                    )
+
+                    create_kiosk_event(
+                        event_type="patient_queue_entry_created",
+                        flow_type="nuevo",
+                        status="ok",
+                        message="Paciente nuevo agregado a cola aunque el encounter inicial ya existía",
+                        intake_id=intake_id,
+                        metadata={
+                            "queue_id": queue_id,
+                            "openemr_patient_id": openemr_patient_id,
+                            "openemr_patient_uuid_present": bool(openemr_patient_uuid),
+                            "doctor_id": doctor_id,
+                            "doctor_name": doctor_name,
+                            "motivo_consulta": data.get("motivo_consulta"),
+                            "encounter_creation_skipped": True,
+                        },
+                    )
+
+                    
                     session.pop("pending_intake", None)
                     session.pop("pending_intake_token", None)
                     session.pop("pending_intake_processing", None)
@@ -494,6 +592,44 @@ def create_app():
 
                 intake_id = create_patient_intake(data)
 
+                doctor_id, doctor_name = get_queue_doctor_identity(
+                    data.get("profesional_area")
+                )
+
+                queue_id = create_patient_queue_entry(
+                    openemr_pid=openemr_patient_id,
+                    openemr_puuid=openemr_patient_uuid,
+                    openemr_encounter_id=openemr_encounter_id,
+                    patient_name=build_new_patient_queue_name(data),
+                    doctor_id=doctor_id,
+                    doctor_name=doctor_name,
+                    visit_reason=data.get("motivo_consulta"),
+                    status="pending",
+                    metadata={
+                        "flow_type": "nuevo",
+                        "intake_id": intake_id,
+                        "openemr_encounter_uuid_present": bool(openemr_encounter_uuid),
+                        "profesional_area": data.get("profesional_area"),
+                    },
+                )
+
+                create_kiosk_event(
+                    event_type="patient_queue_entry_created",
+                    flow_type="nuevo",
+                    status="ok",
+                    message="Paciente nuevo agregado a la cola operativa del portal médico",
+                    intake_id=intake_id,
+                    metadata={
+                        "queue_id": queue_id,
+                        "openemr_patient_id": openemr_patient_id,
+                        "openemr_patient_uuid_present": bool(openemr_patient_uuid),
+                        "openemr_encounter_id": openemr_encounter_id,
+                        "doctor_id": doctor_id,
+                        "doctor_name": doctor_name,
+                        "motivo_consulta": data.get("motivo_consulta"),
+                    },
+                )
+
                 create_kiosk_event(
                     event_type="new_patient_created_with_encounter",
                     flow_type="nuevo",
@@ -505,6 +641,7 @@ def create_app():
                         "openemr_patient_uuid_present": bool(openemr_patient_uuid),
                         "openemr_encounter_id": openemr_encounter_id,
                         "openemr_encounter_uuid_present": bool(openemr_encounter_uuid),
+                        "queue_id": queue_id,
                         "ci_documento_present": bool(data.get("ci_documento")),
                         "telefono_present": bool(data.get("telefono")),
                         "sexo_present": bool(data.get("sexo")),
@@ -593,6 +730,45 @@ def create_app():
                 encounter_id = result_data.get("encounter")
                 encounter_uuid = result_data.get("uuid")
 
+                doctor_id, doctor_name = get_queue_doctor_identity(
+                    data.get("profesional_area")
+                )
+
+                queue_id = create_patient_queue_entry(
+                    openemr_pid=data.get("openemr_pid"),
+                    openemr_puuid=patient_uuid,
+                    openemr_encounter_id=encounter_id,
+                    patient_name=build_existing_patient_queue_name(data),
+                    doctor_id=doctor_id,
+                    doctor_name=doctor_name,
+                    visit_reason=motivo_consulta,
+                    status="pending",
+                    metadata={
+                        "flow_type": "antiguo",
+                        "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
+                        "openemr_encounter_uuid_present": bool(encounter_uuid),
+                        "profesional_area": data.get("profesional_area"),
+                    },
+                )
+
+                create_kiosk_event(
+                    event_type="patient_queue_entry_created",
+                    flow_type="antiguo",
+                    status="ok",
+                    message="Paciente antiguo agregado a la cola operativa del portal médico",
+                    metadata={
+                        "queue_id": queue_id,
+                        "openemr_pid_present": bool(data.get("openemr_pid")),
+                        "openemr_uuid_present": bool(patient_uuid),
+                        "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
+                        "encounter_id": encounter_id,
+                        "doctor_id": doctor_id,
+                        "doctor_name": doctor_name,
+                        "motivo_consulta": motivo_consulta,
+                    },
+                )    
+
+
                 create_kiosk_event(
                     event_type="existing_patient_encounter_created",
                     flow_type="antiguo",
@@ -604,6 +780,7 @@ def create_app():
                         "openemr_pubpid_present": bool(data.get("openemr_pubpid")),
                         "encounter_id": encounter_id,
                         "encounter_uuid_present": bool(encounter_uuid),
+                        "queue_id": queue_id,
                         "profesional_area": data.get("profesional_area"),
                         "motivo_consulta_present": bool(motivo_consulta),
                         "submission_token_present": bool(submission_token),
