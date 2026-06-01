@@ -15,3 +15,7 @@ logs/
 data/openemr_tokens.json
 data/openemr_tokens.json
 data/*.json
+
+# Local OpenEMR token files
+/data/openemr_tokens*.json
+/data/*.json
