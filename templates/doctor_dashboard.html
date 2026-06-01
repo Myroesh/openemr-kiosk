@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Portal médico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="admin-page doctor-page">
+    <section class="admin-card doctor-card">
+      <header class="admin-header doctor-header">
+        <div>
+          <h1>Portal médico</h1>
+          <p class="doctor-subtitle">
+            Cola operativa de pacientes por fecha y profesional.
+          </p>
+        </div>
+
+        <a class="small-link" href="/">Volver al kiosko</a>
+      </header>
+
+      <form class="doctor-filters" method="get" action="/doctor/dashboard">
+        <div>
+          <label for="date">Fecha</label>
+          <input
+            id="date"
+            name="date"
+            type="date"
+            value="{{ selected_date }}"
+          >
+        </div>
+
+        <div>
+          <label for="doctor">Profesional</label>
+          <select id="doctor" name="doctor">
+            <option value="">Todos los profesionales</option>
+            {% for professional in professionals %}
+              <option
+                value="{{ professional }}"
+                {% if selected_doctor == professional %}selected{% endif %}
+              >
+                {{ professional }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button class="btn doctor-filter-btn" type="submit">
+          Filtrar
+        </button>
+      </form>
+
+      <section class="doctor-section">
+        <div class="doctor-section-header">
+          <h2>Paciente siguiente</h2>
+        </div>
+
+        {% if next_patient %}
+          <article class="next-patient-card">
+            <div>
+              <span class="status-pill status-pending">Pendiente</span>
+              <h3>{{ next_patient.patient_name or "Paciente sin nombre" }}</h3>
+              <p>
+                {{ next_patient.visit_reason or "Sin motivo registrado" }}
+              </p>
+              <p class="doctor-meta">
+                Profesional: {{ next_patient.doctor_name or "Sin asignar" }} ·
+                Llegada: {{ next_patient.created_at }}
+              </p>
+            </div>
+
+            <form method="post" action="/doctor/queue/{{ next_patient.id }}/start">
+              <input type="hidden" name="next" value="{{ request.full_path }}">
+              <button class="btn" type="submit">
+                Marcar como en atención
+              </button>
+            </form>
+          </article>
+        {% else %}
+          <p class="empty-state">
+            No hay pacientes pendientes para este filtro.
+          </p>
+        {% endif %}
+      </section>
+
+      <section class="doctor-grid">
+        <div class="doctor-column">
+          <div class="doctor-section-header">
+            <h2>Pendientes</h2>
+            <span>{{ pending_patients|length }}</span>
+          </div>
+
+          {% if pending_patients %}
+            {% for patient in pending_patients %}
+              <article class="queue-item">
+                <div>
+                  <span class="status-pill status-pending">Pendiente</span>
+                  <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                  <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                  <p class="doctor-meta">
+                    {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at }}
+                  </p>
+                </div>
+
+                <form method="post" action="/doctor/queue/{{ patient.id }}/start">
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <button class="btn btn-small" type="submit">
+                    En atención
+                  </button>
+                </form>
+              </article>
+            {% endfor %}
+          {% else %}
+            <p class="empty-state">Sin pacientes pendientes.</p>
+          {% endif %}
+        </div>
+
+        <div class="doctor-column">
+          <div class="doctor-section-header">
+            <h2>En atención</h2>
+            <span>{{ in_progress_patients|length }}</span>
+          </div>
+
+          {% if in_progress_patients %}
+            {% for patient in in_progress_patients %}
+              <article class="queue-item">
+                <div>
+                  <span class="status-pill status-progress">En atención</span>
+                  <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                  <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                  <p class="doctor-meta">
+                    Inicio: {{ patient.started_at or "Sin hora" }}
+                  </p>
+                </div>
+
+                <form method="post" action="/doctor/queue/{{ patient.id }}/complete">
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <button class="btn btn-small" type="submit">
+                    Atendido
+                  </button>
+                </form>
+              </article>
+            {% endfor %}
+          {% else %}
+            <p class="empty-state">No hay pacientes en atención.</p>
+          {% endif %}
+        </div>
+
+        <div class="doctor-column">
+          <div class="doctor-section-header">
+            <h2>Atendidos</h2>
+            <span>{{ completed_patients|length }}</span>
+          </div>
+
+          {% if completed_patients %}
+            {% for patient in completed_patients %}
+              <article class="queue-item queue-item-muted">
+                <div>
+                  <span class="status-pill status-completed">Atendido</span>
+                  <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                  <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                  <p class="doctor-meta">
+                    Finalizado: {{ patient.finished_at or "Sin hora" }}
+                  </p>
+                </div>
+              </article>
+            {% endfor %}
+          {% else %}
+            <p class="empty-state">Sin pacientes atendidos en esta fecha.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      {% if other_patients %}
+        <section class="doctor-section">
+          <div class="doctor-section-header">
+            <h2>Otros estados</h2>
+            <span>{{ other_patients|length }}</span>
+          </div>
+
+          {% for patient in other_patients %}
+            <article class="queue-item queue-item-muted">
+              <div>
+                <span class="status-pill status-other">
+                  {{ patient.status }}
+                </span>
+                <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                <p class="doctor-meta">
+                  {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at }}
+                </p>
+              </div>
+            </article>
+          {% endfor %}
+        </section>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

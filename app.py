@@ -21,6 +21,8 @@ from services.db_service import (
     create_patient_intake,
     create_patient_queue_entry,
     create_kiosk_event,
+    list_patient_queue_by_date,
+    update_patient_queue_status,
     list_recent_events,
     list_recent_intakes,
     claim_submission_token,
@@ -157,6 +159,54 @@ def build_existing_patient_queue_name(data):
             return normalized
 
     return "Paciente antiguo"
+
+def split_doctor_queue(rows):
+    pending = []
+    in_progress = []
+    completed = []
+    other = []
+
+    for row in rows:
+        status = row.get("status")
+
+        if status == "pending":
+            pending.append(row)
+        elif status == "in_progress":
+            in_progress.append(row)
+        elif status == "completed":
+            completed.append(row)
+        else:
+            other.append(row)
+
+    return {
+        "next_patient": pending[0] if pending else None,
+        "pending": pending,
+        "in_progress": in_progress,
+        "completed": completed,
+        "other": other,
+    }
+
+
+def filter_queue_rows_by_doctor(rows, doctor_name):
+    normalized_doctor_name = str(doctor_name or "").strip()
+
+    if not normalized_doctor_name:
+        return rows
+
+    return [
+        row
+        for row in rows
+        if str(row.get("doctor_name") or "").strip() == normalized_doctor_name
+    ]
+
+
+def get_doctor_dashboard_redirect():
+    next_url = request.form.get("next") or request.referrer or url_for("doctor_dashboard")
+
+    if not next_url.startswith("/doctor/dashboard"):
+        return url_for("doctor_dashboard")
+
+    return next_url
 
 def create_app():
     app = Flask(__name__)
@@ -819,6 +869,74 @@ def create_app():
                 )
 
         return render_template("confirmar_antiguo.html", data=data, errors=[])
+
+    @app.route("/doctor/dashboard")
+    def doctor_dashboard():
+        selected_date = request.args.get("date") or date.today().isoformat()
+        selected_doctor = request.args.get("doctor") or ""
+
+        rows = list_patient_queue_by_date(queue_date=selected_date)
+        rows = filter_queue_rows_by_doctor(rows, selected_doctor)
+
+        queue = split_doctor_queue(rows)
+
+        return render_template(
+            "doctor_dashboard.html",
+            selected_date=selected_date,
+            selected_doctor=selected_doctor,
+            professionals=Config.PROFESSIONALS,
+            next_patient=queue["next_patient"],
+            pending_patients=queue["pending"],
+            in_progress_patients=queue["in_progress"],
+            completed_patients=queue["completed"],
+            other_patients=queue["other"],
+        )
+
+    @app.route("/doctor/queue/<int:queue_id>/start", methods=["POST"])
+    def doctor_queue_start(queue_id):
+        updated = update_patient_queue_status(queue_id, "in_progress")
+
+        if not updated:
+            create_kiosk_event(
+                event_type="patient_queue_status_update_failed",
+                flow_type="doctor_portal",
+                status="error",
+                message="No se encontró paciente en cola para marcar como en atención",
+                metadata={"queue_id": queue_id, "target_status": "in_progress"},
+            )
+
+        return redirect(get_doctor_dashboard_redirect())
+
+    @app.route("/doctor/queue/<int:queue_id>/complete", methods=["POST"])
+    def doctor_queue_complete(queue_id):
+        updated = update_patient_queue_status(queue_id, "completed")
+
+        if not updated:
+            create_kiosk_event(
+                event_type="patient_queue_status_update_failed",
+                flow_type="doctor_portal",
+                status="error",
+                message="No se encontró paciente en cola para marcar como atendido",
+                metadata={"queue_id": queue_id, "target_status": "completed"},
+            )
+
+        return redirect(get_doctor_dashboard_redirect())
+
+    @app.route("/doctor/queue/<int:queue_id>/cancel", methods=["POST"])
+    def doctor_queue_cancel(queue_id):
+        updated = update_patient_queue_status(queue_id, "cancelled")
+
+        if not updated:
+            create_kiosk_event(
+                event_type="patient_queue_status_update_failed",
+                flow_type="doctor_portal",
+                status="error",
+                message="No se encontró paciente en cola para cancelar",
+                metadata={"queue_id": queue_id, "target_status": "cancelled"},
+            )
+
+        return redirect(get_doctor_dashboard_redirect())
+
 
     @app.route("/exito")
     def exito():

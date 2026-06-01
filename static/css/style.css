@@ -485,3 +485,233 @@ pre {
 body.dialog-open {
   overflow: hidden;
 }
+/* Doctor portal */
+
+.doctor-page {
+  padding: 24px;
+}
+
+.doctor-card {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.doctor-header h1 {
+  margin: 0 0 6px;
+}
+
+.doctor-subtitle {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.doctor-filters {
+  display: grid;
+  grid-template-columns: 220px minmax(260px, 1fr) 180px;
+  gap: 14px;
+  align-items: end;
+  margin: 20px 0 26px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #f9fcfd;
+}
+
+.doctor-filters label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 850;
+  color: var(--color-primary-dark);
+}
+
+.doctor-filters input,
+.doctor-filters select {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--color-text);
+}
+
+.doctor-filter-btn {
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+.doctor-section {
+  margin-top: 22px;
+}
+
+.doctor-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.doctor-section-header h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.doctor-section-header span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-weight: 900;
+}
+
+.next-patient-card {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 280px);
+  gap: 18px;
+  align-items: center;
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(24, 191, 183, 0.35);
+  background:
+    radial-gradient(circle at top right, rgba(24, 191, 183, 0.12), transparent 30%),
+    #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 95, 140, 0.10);
+}
+
+.next-patient-card h3,
+.queue-item h3 {
+  margin: 8px 0 6px;
+  color: var(--color-text);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.next-patient-card p,
+.queue-item p {
+  margin: 0;
+  color: var(--color-text-soft);
+  line-height: 1.4;
+}
+
+.doctor-meta {
+  margin-top: 8px !important;
+  font-size: 13px;
+  color: #718394 !important;
+}
+
+.doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.doctor-column {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.queue-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: #f9fcfd;
+}
+
+.queue-item:last-child {
+  margin-bottom: 0;
+}
+
+.queue-item-muted {
+  opacity: 0.78;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.status-pending {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.status-progress {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-dark);
+}
+
+.status-completed {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.status-other {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-small {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  box-shadow: none;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f9fcfd;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-soft);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+@media (max-width: 1080px) {
+  .doctor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .next-patient-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .doctor-page {
+    padding: 14px;
+  }
+
+  .doctor-filters {
+    grid-template-columns: 1fr;
+  }
+}
