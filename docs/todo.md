@@ -347,11 +347,13 @@ Regla inicial del MVP:
 
 ## 3.4 Tabla local propuesta: `patient_queue`
 
-- [ ] Crear tabla local `patient_queue` para registrar el flujo operativo de atención.
+- [x] Crear tabla local `patient_queue` para registrar el flujo operativo de atención.
 
-Campos sugeridos:
+Campos implementados:
 
 - `id`
+- `created_at`
+- `queue_date`
 - `openemr_pid`
 - `openemr_puuid`
 - `openemr_encounter_id`
@@ -360,8 +362,6 @@ Campos sugeridos:
 - `doctor_name`
 - `visit_reason`
 - `status`
-- `queue_date`
-- `created_at`
 - `started_at`
 - `finished_at`
 - `metadata_json`
@@ -372,8 +372,8 @@ Notas:
 - `openemr_puuid`: útil para API si corresponde.
 - `openemr_encounter_id`: necesario para enlazar el encounter creado.
 - `patient_name`: nombre visible del paciente en la cola.
-- `doctor_id`: idealmente debe corresponder al provider/user de OpenEMR.
-- `doctor_name`: nombre del profesional para mostrar rápido en el portal.
+- `doctor_id`: por ahora se obtiene desde `OPENEMR_PROVIDER_ID_MAP` cuando existe.
+- `doctor_name`: nombre del profesional seleccionado en el formulario.
 - `visit_reason`: motivo de consulta usando el catálogo cerrado ya existente.
 - `status`: puede ser `pending`, `in_progress`, `completed`, `cancelled`, `no_show` o `error`.
 - `queue_date`: fecha operativa para filtros diarios.
@@ -382,18 +382,42 @@ Notas:
 - `finished_at`: fecha/hora en que el doctor marca “atendido”.
 - `metadata_json`: solo datos mínimos no sensibles.
 
+Implementado en:
+
+- `services/db_service.py`
+- `init_db()`
+- `create_patient_queue_entry()`
+- `list_patient_queue_by_date()`
+- `list_patient_queue_by_status()`
+- `get_next_patient_for_doctor()`
+- `update_patient_queue_status()`
+
 ---
 
 ## 3.5 Integración con flujo actual del kiosko
 
-- [ ] Guardar en `patient_queue` cada paciente nuevo que complete `/nuevo` → `/confirmar`.
-- [ ] Guardar en `patient_queue` cada paciente antiguo que complete `/antiguo` → `/confirmar-antiguo`.
-- [ ] Registrar `openemr_pid`, `openemr_puuid` y `openemr_encounter_id` cuando estén disponibles.
-- [ ] Registrar `visit_reason` usando el catálogo cerrado ya existente.
-- [ ] Registrar fecha/hora de llegada.
-- [ ] Registrar estado inicial como `pending`.
-- [ ] Evitar duplicar entradas en `patient_queue` si el encounter ya existe.
-- [ ] Registrar evento en `kiosk_events` cuando se agregue un paciente a la cola.
+- [x] Guardar en `patient_queue` cada paciente nuevo que complete `/nuevo` → `/confirmar`.
+- [x] Guardar en `patient_queue` cada paciente antiguo que complete `/antiguo` → `/confirmar-antiguo`.
+- [x] Registrar `openemr_pid`, `openemr_puuid` y `openemr_encounter_id` cuando estén disponibles.
+- [x] Registrar `visit_reason` usando el catálogo cerrado ya existente.
+- [x] Registrar fecha/hora de llegada.
+- [x] Registrar estado inicial como `pending`.
+- [x] Evitar duplicar entradas en `patient_queue` si el encounter ya existe.
+- [x] Registrar evento en `kiosk_events` cuando se agregue un paciente a la cola.
+
+Implementado en:
+
+- `app.py`
+- `get_queue_doctor_identity()`
+- `build_new_patient_queue_name()`
+- `build_existing_patient_queue_name()`
+- evento `patient_queue_entry_created`
+
+Prueba realizada:
+
+- Paciente de prueba `Ramiro Portal Prueba` fue creado desde el flujo del kiosko.
+- El encounter generado en OpenEMR fue registrado en `patient_queue`.
+- Estado inicial confirmado: `pending`.
 
 ---
 
@@ -401,34 +425,41 @@ Notas:
 
 MVP recomendado:
 
-- [ ] Agregar campo de doctor/profesional asignado al flujo de registro.
-- [ ] Usar lista cerrada de doctores/profesionales.
-- [ ] Guardar `doctor_id` y `doctor_name` en `patient_queue`.
+- [x] Agregar campo de doctor/profesional asignado al flujo de registro.
+- [x] Usar lista cerrada de doctores/profesionales.
+- [x] Guardar `doctor_id` y `doctor_name` en `patient_queue`.
 
-Opciones iniciales:
+Opciones iniciales configuradas:
 
+- Dra. Ana Saavedra
 - Dra. Evelyn Mejia Patiño
-- Profesional 2
-- Profesional 3
-- Recepción / Sin asignar
+- Dra. Katherine Oliveira
+- Dr. Jose Montaño
+- Dr. Hernan Hinojosa
 
 Pendiente:
 
 - [ ] Verificar desde OpenEMR qué endpoint o dato real conviene usar para listar usuarios/profesionales.
 - [ ] Confirmar si se usará provider de OpenEMR o una lista local temporal.
 - [ ] No inventar IDs de provider sin verificar en OpenEMR.
+- [ ] Revisar si el filtro definitivo debe usar `doctor_name`, `doctor_id` o ambos.
 
 ---
 
 ## 3.7 Rutas Flask propuestas
 
-- [ ] Crear vista principal del portal médico: `GET /doctor/dashboard`
-- [ ] Crear filtro por fecha: `GET /doctor/dashboard?date=YYYY-MM-DD`
-- [ ] Crear filtro por doctor: `GET /doctor/dashboard?doctor_id=ID`
-- [ ] Crear acción para marcar paciente como en atención: `POST /doctor/queue/<id>/start`
-- [ ] Crear acción para marcar paciente como atendido: `POST /doctor/queue/<id>/complete`
-- [ ] Crear acción para cancelar o retirar de cola: `POST /doctor/queue/<id>/cancel`
-- [ ] Crear historial por fecha: `GET /doctor/history?date=YYYY-MM-DD`
+- [x] Crear vista principal del portal médico: `GET /doctor/dashboard`.
+- [x] Crear filtro por fecha: `GET /doctor/dashboard?date=YYYY-MM-DD`.
+- [x] Crear filtro por doctor: `GET /doctor/dashboard?doctor=Nombre%20Profesional`.
+- [x] Crear acción para marcar paciente como en atención: `POST /doctor/queue/<id>/start`.
+- [x] Crear acción para marcar paciente como atendido: `POST /doctor/queue/<id>/complete`.
+- [x] Crear acción para cancelar o retirar de cola: `POST /doctor/queue/<id>/cancel`.
+- [~] Crear historial por fecha: `GET /doctor/history?date=YYYY-MM-DD`.
+
+Nota:
+
+- El historial por fecha ya existe funcionalmente dentro de `/doctor/dashboard` mediante el filtro de fecha y la sección “Atendidos”.
+- Queda pendiente decidir si se necesita una ruta separada `/doctor/history`.
 
 ---
 
@@ -436,18 +467,24 @@ Pendiente:
 
 La pantalla debe mostrar:
 
-- [ ] Nombre del doctor seleccionado.
-- [ ] Fecha actual.
-- [ ] Paciente siguiente.
-- [ ] Lista de pacientes pendientes.
-- [ ] Lista de pacientes en atención.
-- [ ] Lista de pacientes atendidos del día.
-- [ ] Filtro por fecha.
-- [ ] Filtro por doctor si todavía no hay login.
-- [ ] Botón “Marcar como en atención”.
-- [ ] Botón “Marcar como atendido”.
+- [x] Nombre del doctor seleccionado.
+- [x] Fecha actual.
+- [x] Paciente siguiente.
+- [x] Lista de pacientes pendientes.
+- [x] Lista de pacientes en atención.
+- [x] Lista de pacientes atendidos del día.
+- [x] Filtro por fecha.
+- [x] Filtro por doctor si todavía no hay login.
+- [x] Botón “Marcar como en atención”.
+- [x] Botón “Marcar como atendido”.
+- [ ] Botón visible para cancelar o retirar paciente de cola.
 - [ ] Link para abrir paciente o encounter en OpenEMR, si se puede construir de forma segura.
-- [ ] Mensaje claro si no hay pacientes pendientes.
+- [x] Mensaje claro si no hay pacientes pendientes.
+
+Implementado en:
+
+- `templates/doctor_dashboard.html`
+- `static/css/style.css`
 
 ---
 
@@ -485,39 +522,69 @@ Atendidos:
 - 08:30 - Carla Méndez - Sesión
 - 09:00 - Luis Rojas - Entrevista con los padres
 
+Nota:
+
+- La primera versión funcional ya fue implementada en `/doctor/dashboard`.
+- Quedan pendientes refinamientos visuales y operativos.
+
 ---
 
 ## 3.10 Criterios de aceptación del portal médico
 
-- [ ] El doctor puede ver pacientes asignados a él.
-- [ ] El paciente siguiente se calcula por orden de llegada.
-- [ ] El portal muestra pacientes pendientes del día.
-- [ ] El portal muestra pacientes en atención.
-- [ ] El portal muestra pacientes atendidos del día.
-- [ ] El historial diario muestra solamente pacientes marcados como atendidos.
-- [ ] El filtro por fecha funciona correctamente.
-- [ ] El sistema no reemplaza las notas clínicas de OpenEMR.
-- [ ] OpenEMR sigue siendo la fuente principal para información clínica.
-- [ ] El portal no permite editar datos clínicos.
-- [ ] El portal no expone tokens, secretos ni datos innecesarios.
+- [x] El doctor puede ver pacientes asignados a él mediante filtro por profesional.
+- [x] El paciente siguiente se calcula por orden de llegada.
+- [x] El portal muestra pacientes pendientes del día.
+- [x] El portal muestra pacientes en atención.
+- [x] El portal muestra pacientes atendidos del día.
+- [x] El historial diario muestra pacientes marcados como atendidos mediante el filtro por fecha.
+- [x] El filtro por fecha funciona correctamente.
+- [x] El sistema no reemplaza las notas clínicas de OpenEMR.
+- [x] OpenEMR sigue siendo la fuente principal para información clínica.
+- [x] El portal no permite editar datos clínicos.
+- [x] El portal no expone tokens, secretos ni datos innecesarios.
+- [ ] El portal debe quedar protegido con autenticación básica o mecanismo equivalente.
+- [ ] El portal debe mostrar horas en formato más legible para usuarios finales.
+- [ ] El portal debe incluir link seguro hacia OpenEMR si se confirma URL útil.
 
 ---
 
 ## 3.11 Pruebas necesarias del portal médico
 
-- [ ] Paciente nuevo desde kiosko aparece en portal doctor.
+- [x] Paciente nuevo desde kiosko aparece en portal doctor.
 - [ ] Paciente antiguo desde kiosko aparece en portal doctor.
-- [ ] Paciente aparece con estado `pending`.
-- [ ] Doctor marca paciente como `in_progress`.
-- [ ] Doctor marca paciente como `completed`.
-- [ ] Paciente completado desaparece de pendientes.
-- [ ] Paciente completado aparece en historial por fecha.
-- [ ] Filtro por fecha funciona correctamente.
-- [ ] Filtro por doctor funciona correctamente.
-- [ ] Reiniciar Flask no borra la cola.
+- [x] Paciente aparece con estado `pending`.
+- [x] Doctor marca paciente como `in_progress`.
+- [x] Doctor marca paciente como `completed`.
+- [x] Paciente completado desaparece de pendientes.
+- [x] Paciente completado aparece en historial por fecha.
+- [x] Filtro por fecha funciona correctamente.
+- [x] Filtro por doctor funciona correctamente.
+- [x] Reiniciar Flask no borra la cola.
 - [ ] Reiniciar servidor no borra la cola.
 - [ ] Error de OpenEMR no rompe la vista del portal.
 - [ ] Paciente sin doctor asignado se muestra en una sección clara: “Sin asignar”.
+- [x] Se confirmó persistencia en SQLite usando `list_patient_queue_by_date()`.
+
+Prueba funcional realizada:
+
+- `Ramiro Portal Prueba` apareció en cola con estado `pending`.
+- Se marcó como `in_progress`.
+- Se registró `started_at`.
+- Se marcó como `completed`.
+- Se registró `finished_at`.
+
+---
+
+## 3.12 Refinamientos pendientes del portal médico
+
+- [ ] Limpiar formato de `static/css/style.css` y asegurar newline final.
+- [ ] Proteger `/doctor/dashboard` y rutas `/doctor/queue/...` con autenticación básica o mecanismo equivalente.
+- [ ] Agregar botón visible “Cancelar” en pacientes pendientes y/o en atención.
+- [ ] Agregar enlace seguro para abrir paciente o encounter en OpenEMR.
+- [ ] Mejorar formato visual de fechas y horas.
+- [ ] Eliminar registros de prueba de `patient_queue`, por ejemplo `Paciente Test`.
+- [ ] Revisar si el filtro debe ser por `doctor_name`, `doctor_id` o ambos.
+- [ ] Evaluar si se necesita ruta separada `/doctor/history`.
 
 ---
 
@@ -691,23 +758,32 @@ Atendidos:
 
 ## Fase 12 - Portal de doctores
 
-- [ ] Crear tabla local `patient_queue`.
-- [ ] Conectar flujo de paciente nuevo con `patient_queue`.
-- [ ] Conectar flujo de paciente antiguo con `patient_queue`.
-- [ ] Agregar selección o asignación de doctor/profesional.
-- [ ] Crear ruta `/doctor/dashboard`.
-- [ ] Crear template `templates/doctor_dashboard.html`.
-- [ ] Mostrar paciente siguiente.
-- [ ] Mostrar pacientes pendientes.
-- [ ] Mostrar pacientes en atención.
-- [ ] Mostrar pacientes atendidos.
-- [ ] Agregar filtro por fecha.
-- [ ] Agregar filtro por doctor si todavía no hay login.
-- [ ] Agregar botón “Marcar como en atención”.
-- [ ] Agregar botón “Marcar como atendido”.
+- [x] Crear tabla local `patient_queue`.
+- [x] Conectar flujo de paciente nuevo con `patient_queue`.
+- [x] Conectar flujo de paciente antiguo con `patient_queue`.
+- [x] Agregar selección o asignación de doctor/profesional.
+- [x] Crear ruta `/doctor/dashboard`.
+- [x] Crear template `templates/doctor_dashboard.html`.
+- [x] Mostrar paciente siguiente.
+- [x] Mostrar pacientes pendientes.
+- [x] Mostrar pacientes en atención.
+- [x] Mostrar pacientes atendidos.
+- [x] Agregar filtro por fecha.
+- [x] Agregar filtro por doctor si todavía no hay login.
+- [x] Agregar botón “Marcar como en atención”.
+- [x] Agregar botón “Marcar como atendido”.
+- [ ] Agregar botón visible “Cancelar”.
 - [ ] Agregar link seguro hacia OpenEMR si se confirma URL útil.
-- [ ] Registrar cambios de estado en `kiosk_events`.
-- [ ] Probar flujo completo kiosko → cola médico → atendido.
+- [x] Registrar cambios de estado en `kiosk_events`.
+- [x] Probar flujo completo kiosko → cola médico → atendido.
+
+Pendientes inmediatos:
+
+- [ ] Limpiar CSS/newline.
+- [ ] Proteger portal con autenticación básica.
+- [ ] Agregar botón “Cancelar” visible.
+- [ ] Agregar enlace a OpenEMR.
+- [ ] Mejorar formato de fechas/horas.
 
 ---
 
@@ -789,6 +865,10 @@ Swagger OpenEMR:
 - 2026-05-22: Agregar como siguiente módulo el portal de doctores.
 - 2026-05-22: El portal de doctores debe funcionar como vista operativa, no como reemplazo de OpenEMR.
 - 2026-05-22: La cola médica se manejará inicialmente con tabla local `patient_queue`.
+- 2026-06-01: Se implementó la tabla local `patient_queue` para manejar la cola operativa del portal médico.
+- 2026-06-01: Se conectaron los flujos de paciente nuevo y paciente antiguo con `patient_queue`.
+- 2026-06-01: Se creó el primer dashboard médico en `/doctor/dashboard`.
+- 2026-06-01: Se validó el cambio de estado `pending → in_progress → completed` con persistencia en SQLite.
 
 ---
 
