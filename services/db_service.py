@@ -1,9 +1,19 @@
 import json
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from config import Config
+
+
+QUEUE_STATUSES = {
+    "pending",
+    "in_progress",
+    "completed",
+    "cancelled",
+    "no_show",
+    "error",
+}
 
 
 def get_db_path():
@@ -74,7 +84,61 @@ def init_db():
             """
         )
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS patient_queue (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                queue_date TEXT NOT NULL,
+                openemr_pid TEXT,
+                openemr_puuid TEXT,
+                openemr_encounter_id TEXT,
+                patient_name TEXT,
+                doctor_id TEXT,
+                doctor_name TEXT,
+                visit_reason TEXT,
+                status TEXT NOT NULL DEFAULT 'pending',
+                started_at TEXT,
+                finished_at TEXT,
+                metadata_json TEXT
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_patient_queue_encounter_id
+            ON patient_queue(openemr_encounter_id)
+            WHERE openemr_encounter_id IS NOT NULL
+              AND openemr_encounter_id != ''
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_patient_queue_date_doctor_status
+            ON patient_queue(queue_date, doctor_id, status, created_at)
+            """
+        )
+
         conn.commit()
+
+
+def _now_iso():
+    return datetime.now().isoformat(timespec="seconds")
+
+
+def _today_iso():
+    return date.today().isoformat()
+
+
+def _validate_queue_status(status):
+    if status not in QUEUE_STATUSES:
+        raise ValueError(f"Estado de cola no permitido: {status}")
+
+
+def _json_dumps(data):
+    return json.dumps(data or {}, ensure_ascii=False)
 
 
 def create_kiosk_event(
@@ -85,7 +149,7 @@ def create_kiosk_event(
     intake_id=None,
     metadata=None,
 ):
-    metadata_json = json.dumps(metadata or {}, ensure_ascii=False)
+    metadata_json = _json_dumps(metadata)
 
     with get_connection() as conn:
         cursor = conn.execute(
@@ -102,7 +166,7 @@ def create_kiosk_event(
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                datetime.now().isoformat(timespec="seconds"),
+                _now_iso(),
                 event_type,
                 flow_type,
                 status,
@@ -143,7 +207,7 @@ def create_patient_intake(data):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                datetime.now().isoformat(timespec="seconds"),
+                _now_iso(),
                 data.get("flow_type", "nuevo"),
                 data.get("nombres"),
                 data.get("apellidos"),
@@ -185,6 +249,209 @@ def create_patient_intake(data):
     return intake_id
 
 
+def create_patient_queue_entry(
+    *,
+    openemr_pid=None,
+    openemr_puuid=None,
+    openemr_encounter_id=None,
+    patient_name=None,
+    doctor_id=None,
+    doctor_name=None,
+    visit_reason=None,
+    status="pending",
+    queue_date=None,
+    metadata=None,
+):
+    """
+    Registra un paciente/encounter en la cola operativa del portal médico.
+
+    Si `openemr_encounter_id` ya existe, devuelve el registro existente para
+    evitar duplicados por reintentos o doble submit.
+    """
+
+    _validate_queue_status(status)
+
+    normalized_encounter_id = str(openemr_encounter_id or "").strip()
+    normalized_queue_date = queue_date or _today_iso()
+    metadata_json = _json_dumps(metadata)
+
+    with get_connection() as conn:
+        if normalized_encounter_id:
+            existing = conn.execute(
+                """
+                SELECT id
+                FROM patient_queue
+                WHERE openemr_encounter_id = ?
+                LIMIT 1
+                """,
+                (normalized_encounter_id,),
+            ).fetchone()
+
+            if existing:
+                return int(existing["id"])
+
+        cursor = conn.execute(
+            """
+            INSERT INTO patient_queue (
+                created_at,
+                queue_date,
+                openemr_pid,
+                openemr_puuid,
+                openemr_encounter_id,
+                patient_name,
+                doctor_id,
+                doctor_name,
+                visit_reason,
+                status,
+                metadata_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                _now_iso(),
+                normalized_queue_date,
+                openemr_pid,
+                openemr_puuid,
+                normalized_encounter_id or None,
+                patient_name,
+                doctor_id,
+                doctor_name,
+                visit_reason,
+                status,
+                metadata_json,
+            ),
+        )
+
+        queue_id = cursor.lastrowid
+        conn.commit()
+
+    return queue_id
+
+
+def list_patient_queue_by_date(queue_date=None, doctor_id=None):
+    normalized_queue_date = queue_date or _today_iso()
+
+    query = """
+        SELECT *
+        FROM patient_queue
+        WHERE queue_date = ?
+    """
+    params = [normalized_queue_date]
+
+    if doctor_id:
+        query += " AND doctor_id = ?"
+        params.append(doctor_id)
+
+    query += " ORDER BY created_at ASC, id ASC"
+
+    with get_connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def list_patient_queue_by_status(status, queue_date=None, doctor_id=None):
+    _validate_queue_status(status)
+    normalized_queue_date = queue_date or _today_iso()
+
+    query = """
+        SELECT *
+        FROM patient_queue
+        WHERE queue_date = ?
+          AND status = ?
+    """
+    params = [normalized_queue_date, status]
+
+    if doctor_id:
+        query += " AND doctor_id = ?"
+        params.append(doctor_id)
+
+    query += " ORDER BY created_at ASC, id ASC"
+
+    with get_connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def get_next_patient_for_doctor(queue_date=None, doctor_id=None):
+    pending = list_patient_queue_by_status(
+        "pending",
+        queue_date=queue_date,
+        doctor_id=doctor_id,
+    )
+
+    return pending[0] if pending else None
+
+
+def update_patient_queue_status(queue_id, status):
+    _validate_queue_status(status)
+
+    started_at = None
+    finished_at = None
+
+    if status == "in_progress":
+        started_at = _now_iso()
+    elif status in {"completed", "cancelled", "no_show"}:
+        finished_at = _now_iso()
+
+    with get_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT *
+            FROM patient_queue
+            WHERE id = ?
+            """,
+            (queue_id,),
+        ).fetchone()
+
+        if not row:
+            return None
+
+        current_started_at = row["started_at"]
+        current_finished_at = row["finished_at"]
+
+        conn.execute(
+            """
+            UPDATE patient_queue
+            SET status = ?,
+                started_at = COALESCE(?, started_at),
+                finished_at = COALESCE(?, finished_at)
+            WHERE id = ?
+            """,
+            (
+                status,
+                started_at or current_started_at,
+                finished_at or current_finished_at,
+                queue_id,
+            ),
+        )
+        conn.commit()
+
+    create_kiosk_event(
+        event_type="patient_queue_status_updated",
+        flow_type="doctor_portal",
+        status="ok",
+        message="Estado de cola de paciente actualizado",
+        metadata={
+            "queue_id": queue_id,
+            "new_status": status,
+        },
+    )
+
+    with get_connection() as conn:
+        updated_row = conn.execute(
+            """
+            SELECT *
+            FROM patient_queue
+            WHERE id = ?
+            """,
+            (queue_id,),
+        ).fetchone()
+
+    return dict(updated_row) if updated_row else None
+
+
 def list_recent_events(limit=100):
     with get_connection() as conn:
         rows = conn.execute(
@@ -214,6 +481,7 @@ def list_recent_intakes(limit=100):
 
     return [dict(row) for row in rows]
 
+
 def claim_submission_token(token, flow_type):
     """
     Reclama un token de confirmación de forma atómica.
@@ -239,7 +507,7 @@ def claim_submission_token(token, flow_type):
                 """,
                 (
                     token,
-                    datetime.now().isoformat(timespec="seconds"),
+                    _now_iso(),
                     flow_type,
                     "processing",
                 ),
