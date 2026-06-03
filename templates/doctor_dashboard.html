@@ -85,14 +85,14 @@
                 </button>
               </form>
 
-              {% if next_patient.openemr_patient_url %}
+              {% if next_patient.openemr_main_url %}
                 <a
                   class="btn btn-secondary btn-openemr"
-                  href="{{ next_patient.openemr_patient_url }}"
+                  href="{{ next_patient.openemr_main_url }}"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Abrir en OpenEMR
+                  Abrir OpenEMR
                 </a>
               {% endif %}
             </div>
@@ -138,10 +138,10 @@
                     </button>
                   </form>
 
-                  {% if patient.openemr_patient_url %}
+                  {% if patient.openemr_main_url %}
                     <a
                       class="btn btn-secondary btn-small btn-openemr"
-                      href="{{ patient.openemr_patient_url }}"
+                      href="{{ patient.openemr_main_url }}"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -189,10 +189,10 @@
                     </button>
                   </form>
 
-                  {% if patient.openemr_patient_url %}
+                  {% if patient.openemr_main_url %}
                     <a
                       class="btn btn-secondary btn-small btn-openemr"
-                      href="{{ patient.openemr_patient_url }}"
+                      href="{{ patient.openemr_main_url }}"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -224,14 +224,14 @@
                     Finalizado: {{ patient.finished_at_display }}
                   </p>
 
-                  {% if patient.openemr_patient_url %}
+                  {% if patient.openemr_main_url %}
                     <a
                       class="small-link doctor-openemr-link"
-                      href="{{ patient.openemr_patient_url }}"
+                      href="{{ patient.openemr_main_url }}"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Abrir en OpenEMR
+                      Abrir OpenEMR
                     </a>
                   {% endif %}
                 </div>
@@ -262,14 +262,14 @@
                   {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
                 </p>
 
-                {% if patient.openemr_patient_url %}
+                {% if patient.openemr_main_url %}
                   <a
                     class="small-link doctor-openemr-link"
-                    href="{{ patient.openemr_patient_url }}"
+                    href="{{ patient.openemr_main_url }}"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Abrir en OpenEMR
+                    Abrir OpenEMR
                   </a>
                 {% endif %}
               </div>

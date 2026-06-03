@@ -115,5 +115,9 @@ class Config:
             OPENEMR_DEFAULT_PROVIDER_ID,
         ),
     }
+    OPENEMR_MAIN_URL = os.getenv(
+    "OPENEMR_MAIN_URL",
+    "",
+    )
 
     KIOSK_DB_PATH = os.getenv("KIOSK_DB_PATH", "data/kiosk.db")
