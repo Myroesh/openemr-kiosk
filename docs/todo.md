@@ -602,6 +602,62 @@ Nota:
 - Se decidió usar enlace al OpenEMR completo para evitar dependencia de `token_main` dinámico.
 - La persistencia de sesión se manejará con el timeout oficial de OpenEMR y configuración PHP, no con tokens o sesión permanente desde Flask.
 
+## 3.13 Resumen de atenciones por profesional
+
+Objetivo:
+
+- Crear una vista operativa para revisar cuántos pacientes atendió cada profesional y cuánto tiempo tomó cada atención.
+- Esta vista no reemplaza reportes clínicos de OpenEMR.
+- La fuente de datos inicial será la tabla local `patient_queue`.
+
+Vista propuesta:
+
+- [ ] Crear ruta `GET /doctor/summary`.
+- [ ] Proteger `/doctor/summary` con la misma autenticación del portal médico.
+- [ ] Agregar filtros por fecha desde, fecha hasta y profesional.
+- [ ] Mostrar resumen agrupado por profesional.
+- [ ] Mostrar cantidad de pacientes atendidos por profesional.
+- [ ] Mostrar tiempo promedio de atención por profesional.
+- [ ] Mostrar tiempo total de atención por profesional.
+- [ ] Mostrar primera atención y última atención del rango.
+- [ ] Mostrar detalle de pacientes atendidos por profesional.
+- [ ] Permitir volver desde `/doctor/summary` a `/doctor/dashboard`.
+
+Datos necesarios:
+
+- `doctor_id`
+- `doctor_name`
+- `patient_name`
+- `visit_reason`
+- `status`
+- `started_at`
+- `finished_at`
+- `queue_date`
+
+Reglas de cálculo:
+
+- Solo cuentan como atenciones realizadas los registros con `status = completed`.
+- La duración se calcula como `finished_at - started_at`.
+- Si falta `started_at` o `finished_at`, el paciente cuenta como atendido, pero no entra al promedio de duración.
+- Los registros `cancelled`, `no_show` y `error` no cuentan como atenciones realizadas.
+- La vista debe mostrar claramente si existen registros completados sin tiempo calculable.
+
+Métricas iniciales:
+
+- Pacientes atendidos.
+- Atenciones con duración válida.
+- Tiempo promedio de atención.
+- Tiempo total de atención.
+- Primera atención.
+- Última atención.
+
+Implementación propuesta:
+
+- Agregar helper en `services/db_service.py` para consultar pacientes completados por rango de fechas.
+- Agregar helper en `app.py` para agrupar por profesional y calcular duración.
+- Crear template `templates/doctor_summary.html`.
+- Agregar enlace desde `/doctor/dashboard` hacia `/doctor/summary`.
+
 ---
 
 # 4. Fases históricas del proyecto
@@ -792,6 +848,10 @@ Nota:
 - [x] Agregar link seguro hacia OpenEMR completo.
 - [x] Registrar cambios de estado en `kiosk_events`.
 - [x] Probar flujo completo kiosko → cola médico → atendido.
+- [ ] Crear vista de resumen de atenciones por profesional.
+- [ ] Calcular pacientes atendidos por profesional.
+- [ ] Calcular tiempo promedio y total de atención.
+- [ ] Mostrar detalle de pacientes atendidos por fecha.
 
 Pendientes inmediatos:
 
