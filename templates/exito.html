@@ -1,37 +1,21 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Registro completado</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-  <main class="page">
-    <section class="card">
-      <div class="brand">
-        <img
-          class="brand-logo"
-          src="/static/img/logo_centro.png"
-          alt="Centro Neuropsicológico Saavedra"
-        >
+{% extends "base.html" %}
 
-        <h1>Registro completado</h1>
-        <p>Centro Neuropsicológico Saavedra</p>
-      </div>
+{% block title %}Registro completado{% endblock %}
 
-      <div class="readonly-field">
-        El registro fue completado correctamente.
-      </div>
+{% block content %}
+  {% with title="Registro completado", subtitle="Centro Neuropsicológico Saavedra" %}
+    {% include "partials/brand.html" %}
+  {% endwith %}
 
-      <p class="hint">
-        Gracias. Por favor espere a ser llamado.
-      </p>
+  <div class="readonly-field">
+    El registro fue completado correctamente.
+  </div>
 
-      <div class="actions">
-        <a class="btn" href="/">Volver al inicio</a>
-      </div>
-    </section>
-  </main>
-</body>
-</html>
+  <p class="hint">
+    Gracias. Por favor espere a ser llamado.
+  </p>
+
+  <div class="actions">
+    <a class="btn" href="/">Volver al inicio</a>
+  </div>
+{% endblock %}
