@@ -1,71 +1,56 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Paciente antiguo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-  <main class="page">
-    <section class="card">
-      <div class="brand">
-        <img
-            class="brand-logo"
-            src="/static/img/logo_centro.png"
-            alt="Centro Neuropsicológico Saavedra"
-          >
-        <h1>Paciente antiguo</h1>
-        <p>Buscaremos al paciente por nombre y/o teléfono.</p>
-      </div>
+{% extends "base.html" %}
 
-      {% if errors %}
-        <div class="alert">
-          {% for error in errors %}
-            <div>{{ error }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
+{% block title %}Paciente antiguo{% endblock %}
 
-      <form method="post" action="/antiguo" class="form">
-        <label>Nombre del paciente</label>
-        <input name="nombre" type="text" value="{{ form.nombre or '' }}">
+{% block content %}
+  {% with title="Paciente antiguo", subtitle="Buscaremos al paciente por nombre y/o teléfono." %}
+    {% include "partials/brand.html" %}
+  {% endwith %}
 
-        <label>Teléfono</label>
-        <input name="telefono" type="tel" value="{{ form.telefono or '' }}">
+  {% if errors %}
+    <div class="alert">
+      {% for error in errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-        <label>Profesional</label>
-        <select name="profesional_area">
-          <option value="">Seleccione un profesional</option>
-          {% for professional in professionals %}
-            <option value="{{ professional }}" {% if form.profesional_area == professional %}selected{% endif %}>
-              {{ professional }}
-            </option>
-          {% endfor %}
-        </select>
+  <form method="post" action="/antiguo" class="form">
+    <label>Nombre del paciente</label>
+    <input name="nombre" type="text" value="{{ form.nombre or '' }}">
 
-        <label>Motivo de consulta</label>
-        <select name="motivo_consulta" required>
-          <option value="Sesión" {% if form.motivo_consulta == "Sesión" or not form.motivo_consulta %}selected{% endif %}>
-            Sesión
-          </option>
-          <option value="Revisión de resultados" {% if form.motivo_consulta == "Revisión de resultados" %}selected{% endif %}>
-            Revisión de resultados
-          </option>
-          <option value="Test" {% if form.motivo_consulta == "Test" %}selected{% endif %}>
-            Test
-          </option>
-          <option value="Entrevista con los padres" {% if form.motivo_consulta == "Entrevista con los padres" %}selected{% endif %}>
-            Entrevista con los padres
-          </option>
-        </select>
+    <label>Teléfono</label>
+    <input name="telefono" type="tel" value="{{ form.telefono or '' }}">
 
-        <div class="actions">
-          <button class="btn" type="submit">Continuar</button>
-          <a class="btn btn-secondary" href="/">Volver</a>
-        </div>
-      </form>
-    </section>
-  </main>
-</body>
-</html>
+    <label>Profesional</label>
+    <select name="profesional_area">
+      <option value="">Seleccione un profesional</option>
+      {% for professional in professionals %}
+        <option value="{{ professional }}" {% if form.profesional_area == professional %}selected{% endif %}>
+          {{ professional }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label>Motivo de consulta</label>
+    <select name="motivo_consulta" required>
+      <option value="Sesión" {% if form.motivo_consulta == "Sesión" or not form.motivo_consulta %}selected{% endif %}>
+        Sesión
+      </option>
+      <option value="Revisión de resultados" {% if form.motivo_consulta == "Revisión de resultados" %}selected{% endif %}>
+        Revisión de resultados
+      </option>
+      <option value="Test" {% if form.motivo_consulta == "Test" %}selected{% endif %}>
+        Test
+      </option>
+      <option value="Entrevista con los padres" {% if form.motivo_consulta == "Entrevista con los padres" %}selected{% endif %}>
+        Entrevista con los padres
+      </option>
+    </select>
+
+    <div class="actions">
+      <button class="btn" type="submit">Continuar</button>
+      <a class="btn btn-secondary" href="/">Volver</a>
+    </div>
+  </form>
+{% endblock %}
