@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Sistema de Recepción{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,34 +1,18 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Sistema de Recepción</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-  <main class="page">
-    <section class="card">
-      <div class="brand">
-        <img
-          class="brand-logo"
-          src="/static/img/logo_centro.png"
-          alt="Centro Neuropsicológico Saavedra"
-        >
+{% extends "base.html" %}
 
-        <h1>Sistema de Recepción</h1>
-       
-      </div>
+{% block title %}Sistema de Recepción{% endblock %}
 
-      <p class="hint">
-        Por favor seleccione una opción para iniciar su registro.
-      </p>
+{% block content %}
+  {% with title="Sistema de Recepción", subtitle="" %}
+    {% include "partials/brand.html" %}
+  {% endwith %}
 
-      <div class="actions">
-        <a class="btn" href="/nuevo">Soy paciente nuevo</a>
-        <a class="btn btn-secondary" href="/antiguo">Soy paciente antiguo</a>
-      </div>
-    </section>
-  </main>
-</body>
-</html>
+  <p class="hint">
+    Por favor seleccione una opción para iniciar su registro.
+  </p>
+
+  <div class="actions">
+    <a class="btn" href="/nuevo">Soy paciente nuevo</a>
+    <a class="btn btn-secondary" href="/antiguo">Soy paciente antiguo</a>
+  </div>
+{% endblock %}

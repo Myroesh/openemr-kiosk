@@ -1,0 +1,15 @@
+<div id="confirmDialogBackdrop" class="confirm-dialog-backdrop" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
+    <h2 id="confirmDialogTitle">¿Los datos están correctos?</h2>
+    <p>{{ message }}</p>
+
+    <div class="confirm-dialog-actions">
+      <button id="confirmYes" class="btn" type="button">
+        {{ confirm_label or "Sí, confirmar registro" }}
+      </button>
+      <button id="confirmNo" class="btn btn-secondary" type="button">
+        {{ cancel_label or "No, revisar datos" }}
+      </button>
+    </div>
+  </div>
+</div>
