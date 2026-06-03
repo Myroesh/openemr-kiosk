@@ -477,14 +477,19 @@ La pantalla debe mostrar:
 - [x] Filtro por doctor si todavía no hay login.
 - [x] Botón “Marcar como en atención”.
 - [x] Botón “Marcar como atendido”.
-- [ ] Botón visible para cancelar o retirar paciente de cola.
-- [ ] Link para abrir paciente o encounter en OpenEMR, si se puede construir de forma segura.
+- [x] Botón visible para cancelar o retirar paciente de cola.
+- [x] Link para abrir OpenEMR completo desde el portal.
 - [x] Mensaje claro si no hay pacientes pendientes.
 
 Implementado en:
 
 - `templates/doctor_dashboard.html`
 - `static/css/style.css`
+
+Nota:
+
+- El enlace a OpenEMR abre el entorno principal de OpenEMR.
+- No se usa deep link directo al paciente porque OpenEMR maneja `token_main` dinámico y sesión propia.
 
 ---
 
@@ -542,9 +547,14 @@ Nota:
 - [x] OpenEMR sigue siendo la fuente principal para información clínica.
 - [x] El portal no permite editar datos clínicos.
 - [x] El portal no expone tokens, secretos ni datos innecesarios.
-- [ ] El portal debe quedar protegido con autenticación básica o mecanismo equivalente.
-- [ ] El portal debe mostrar horas en formato más legible para usuarios finales.
-- [ ] El portal debe incluir link seguro hacia OpenEMR si se confirma URL útil.
+- [x] El portal debe quedar protegido con autenticación básica o mecanismo equivalente.
+- [x] El portal debe mostrar horas en formato más legible para usuarios finales.
+- [x] El portal debe incluir link seguro hacia OpenEMR si se confirma URL útil.
+
+Nota:
+
+- La autenticación del portal médico usa credenciales separadas de `/admin/logs`.
+- El enlace abre OpenEMR completo, no un paciente específico.
 
 ---
 
@@ -578,13 +588,19 @@ Prueba funcional realizada:
 ## 3.12 Refinamientos pendientes del portal médico
 
 - [ ] Limpiar formato de `static/css/style.css` y asegurar newline final.
-- [ ] Proteger `/doctor/dashboard` y rutas `/doctor/queue/...` con autenticación básica o mecanismo equivalente.
-- [ ] Agregar botón visible “Cancelar” en pacientes pendientes y/o en atención.
-- [ ] Agregar enlace seguro para abrir paciente o encounter en OpenEMR.
-- [ ] Mejorar formato visual de fechas y horas.
+- [x] Proteger `/doctor/dashboard` y rutas `/doctor/queue/...` con autenticación básica o mecanismo equivalente.
+- [x] Agregar botón visible “Cancelar” en pacientes pendientes y/o en atención.
+- [x] Agregar enlace seguro para abrir OpenEMR completo.
+- [x] Mejorar formato visual de fechas y horas.
 - [ ] Eliminar registros de prueba de `patient_queue`, por ejemplo `Paciente Test`.
 - [ ] Revisar si el filtro debe ser por `doctor_name`, `doctor_id` o ambos.
 - [ ] Evaluar si se necesita ruta separada `/doctor/history`.
+
+Nota:
+
+- Se intentó usar enlace directo al dashboard del paciente, pero OpenEMR abre esa ruta fuera del shell principal.
+- Se decidió usar enlace al OpenEMR completo para evitar dependencia de `token_main` dinámico.
+- La persistencia de sesión se manejará con el timeout oficial de OpenEMR y configuración PHP, no con tokens o sesión permanente desde Flask.
 
 ---
 
@@ -772,18 +788,17 @@ Prueba funcional realizada:
 - [x] Agregar filtro por doctor si todavía no hay login.
 - [x] Agregar botón “Marcar como en atención”.
 - [x] Agregar botón “Marcar como atendido”.
-- [ ] Agregar botón visible “Cancelar”.
-- [ ] Agregar link seguro hacia OpenEMR si se confirma URL útil.
+- [x] Agregar botón visible “Cancelar”.
+- [x] Agregar link seguro hacia OpenEMR completo.
 - [x] Registrar cambios de estado en `kiosk_events`.
 - [x] Probar flujo completo kiosko → cola médico → atendido.
 
 Pendientes inmediatos:
 
 - [ ] Limpiar CSS/newline.
-- [ ] Proteger portal con autenticación básica.
-- [ ] Agregar botón “Cancelar” visible.
-- [ ] Agregar enlace a OpenEMR.
-- [ ] Mejorar formato de fechas/horas.
+- [ ] Probar paciente antiguo desde kiosko aparece en portal doctor.
+- [ ] Probar reinicio completo del servidor y persistencia de cola.
+- [ ] Probar comportamiento cuando OpenEMR tiene sesión expirada.
 
 ---
 
