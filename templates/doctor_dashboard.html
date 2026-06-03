@@ -8,9 +8,9 @@
 </head>
 <body>
   <main
-  class="admin-page doctor-page"
-  data-dashboard-date="{{ selected_date }}"
-  data-dashboard-doctor="{{ selected_doctor }}"
+    class="admin-page doctor-page"
+    data-dashboard-date="{{ selected_date }}"
+    data-dashboard-doctor="{{ selected_doctor }}"
   >
     <section class="admin-card doctor-card">
       <header class="admin-header doctor-header">
@@ -55,59 +55,59 @@
         </button>
       </form>
 
-    <section class="doctor-section">
-      <div class="doctor-section-header">
-        <h2>Paciente siguiente</h2>
-      </div>
+      <section class="doctor-section">
+        <div class="doctor-section-header">
+          <h2>Paciente siguiente</h2>
+        </div>
 
-      <div id="next-patient-container">
-        {% if next_patient %}
-          <article class="next-patient-card">
-            <div>
-              <span class="status-pill status-pending">Pendiente</span>
-              <h3>{{ next_patient.patient_name or "Paciente sin nombre" }}</h3>
-              <p>
-                {{ next_patient.visit_reason or "Sin motivo registrado" }}
-              </p>
-              <p class="doctor-meta">
-                Profesional: {{ next_patient.doctor_name or "Sin asignar" }} ·
-                Llegada: {{ next_patient.created_at_display }}
-              </p>
-            </div>
-
-            <div class="queue-actions">
-              <form method="post" action="/doctor/queue/{{ next_patient.id }}/start">
-                <input type="hidden" name="next" value="{{ request.full_path }}">
-                <button class="btn" type="submit">
-                  Marcar como en atención
-                </button>
-              </form>
-
-              <form method="post" action="/doctor/queue/{{ next_patient.id }}/cancel">
-                <input type="hidden" name="next" value="{{ request.full_path }}">
-                <button class="btn btn-danger-soft" type="submit">
-                  Cancelar
-                </button>
-              </form>
-
-              {% if next_patient.openemr_main_url %}
-                <a
-                  class="btn btn-secondary btn-openemr"
-                  href="{{ next_patient.openemr_main_url }}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Abrir OpenEMR
-                </a>
-              {% endif %}
+        <div id="next-patient-container">
+          {% if next_patient %}
+            <article class="next-patient-card">
+              <div>
+                <span class="status-pill status-pending">Pendiente</span>
+                <h3>{{ next_patient.patient_name or "Paciente sin nombre" }}</h3>
+                <p>
+                  {{ next_patient.visit_reason or "Sin motivo registrado" }}
+                </p>
+                <p class="doctor-meta">
+                  Profesional: {{ next_patient.doctor_name or "Sin asignar" }} ·
+                  Llegada: {{ next_patient.created_at_display }}
+                </p>
               </div>
-            </div>
-          </article>
-        {% else %}
-          <p class="empty-state">
-            No hay pacientes pendientes para este filtro.
-          </p>
-        {% endif %}
+
+              <div class="queue-actions">
+                <form method="post" action="/doctor/queue/{{ next_patient.id }}/start">
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <button class="btn" type="submit">
+                    Marcar como en atención
+                  </button>
+                </form>
+
+                <form method="post" action="/doctor/queue/{{ next_patient.id }}/cancel">
+                  <input type="hidden" name="next" value="{{ request.full_path }}">
+                  <button class="btn btn-danger-soft" type="submit">
+                    Cancelar
+                  </button>
+                </form>
+
+                {% if next_patient.openemr_main_url %}
+                  <a
+                    class="btn btn-secondary btn-openemr"
+                    href="{{ next_patient.openemr_main_url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir OpenEMR
+                  </a>
+                {% endif %}
+              </div>
+            </article>
+          {% else %}
+            <p class="empty-state">
+              No hay pacientes pendientes para este filtro.
+            </p>
+          {% endif %}
+        </div>
       </section>
 
       <section class="doctor-grid">
@@ -116,50 +116,51 @@
             <h2>Pendientes</h2>
             <span id="pending-count">{{ pending_patients|length }}</span>
           </div>
-          <div id="pending-patients-container"></div>
-          {% if pending_patients %}
-            {% for patient in pending_patients %}
-              <article class="queue-item">
-                <div>
-                  <span class="status-pill status-pending">Pendiente</span>
-                  <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
-                  <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
-                  <p class="doctor-meta">
-                    {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
-                  </p>
-                </div>
 
-                <div class="queue-actions">
-                  <form method="post" action="/doctor/queue/{{ patient.id }}/start">
-                    <input type="hidden" name="next" value="{{ request.full_path }}">
-                    <button class="btn btn-small" type="submit">
-                      En atención
-                    </button>
-                  </form>
+          <div id="pending-patients-container">
+            {% if pending_patients %}
+              {% for patient in pending_patients %}
+                <article class="queue-item">
+                  <div>
+                    <span class="status-pill status-pending">Pendiente</span>
+                    <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                    <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                    <p class="doctor-meta">
+                      {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
+                    </p>
+                  </div>
 
-                  <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
-                    <input type="hidden" name="next" value="{{ request.full_path }}">
-                    <button class="btn btn-small btn-danger-soft" type="submit">
-                      Cancelar
-                    </button>
-                  </form>
+                  <div class="queue-actions">
+                    <form method="post" action="/doctor/queue/{{ patient.id }}/start">
+                      <input type="hidden" name="next" value="{{ request.full_path }}">
+                      <button class="btn btn-small" type="submit">
+                        En atención
+                      </button>
+                    </form>
 
-                  {% if patient.openemr_main_url %}
-                    <a
-                      class="btn btn-secondary btn-small btn-openemr"
-                      href="{{ patient.openemr_main_url }}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      OpenEMR
-                    </a>
-                  {% endif %}
-                </div>
-              </article>
-            {% endfor %}
-          {% else %}
-            <p class="empty-state">Sin pacientes pendientes.</p>
-          {% endif %}
+                    <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
+                      <input type="hidden" name="next" value="{{ request.full_path }}">
+                      <button class="btn btn-small btn-danger-soft" type="submit">
+                        Cancelar
+                      </button>
+                    </form>
+
+                    {% if patient.openemr_main_url %}
+                      <a
+                        class="btn btn-secondary btn-small btn-openemr"
+                        href="{{ patient.openemr_main_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        OpenEMR
+                      </a>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            {% else %}
+              <p class="empty-state">Sin pacientes pendientes.</p>
+            {% endif %}
           </div>
         </div>
 
@@ -169,49 +170,51 @@
             <span id="in-progress-count">{{ in_progress_patients|length }}</span>
           </div>
 
-          {% if in_progress_patients %}
-            {% for patient in in_progress_patients %}
-              <article class="queue-item">
-                <div>
-                  <span class="status-pill status-progress">En atención</span>
-                  <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
-                  <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
-                  <p class="doctor-meta">
-                    Inicio: {{ patient.started_at_display }}
-                  </p>
-                </div>
+          <div id="in-progress-patients-container">
+            {% if in_progress_patients %}
+              {% for patient in in_progress_patients %}
+                <article class="queue-item">
+                  <div>
+                    <span class="status-pill status-progress">En atención</span>
+                    <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                    <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                    <p class="doctor-meta">
+                      Inicio: {{ patient.started_at_display }}
+                    </p>
+                  </div>
 
-                <div class="queue-actions">
-                  <form method="post" action="/doctor/queue/{{ patient.id }}/complete">
-                    <input type="hidden" name="next" value="{{ request.full_path }}">
-                    <button class="btn btn-small" type="submit">
-                      Atendido
-                    </button>
-                  </form>
+                  <div class="queue-actions">
+                    <form method="post" action="/doctor/queue/{{ patient.id }}/complete">
+                      <input type="hidden" name="next" value="{{ request.full_path }}">
+                      <button class="btn btn-small" type="submit">
+                        Atendido
+                      </button>
+                    </form>
 
-                  <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
-                    <input type="hidden" name="next" value="{{ request.full_path }}">
-                    <button class="btn btn-small btn-danger-soft" type="submit">
-                      Cancelar
-                    </button>
-                  </form>
+                    <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
+                      <input type="hidden" name="next" value="{{ request.full_path }}">
+                      <button class="btn btn-small btn-danger-soft" type="submit">
+                        Cancelar
+                      </button>
+                    </form>
 
-                  {% if patient.openemr_main_url %}
-                    <a
-                      class="btn btn-secondary btn-small btn-openemr"
-                      href="{{ patient.openemr_main_url }}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      OpenEMR
-                    </a>
-                  {% endif %}
-                </div>
-              </article>
-            {% endfor %}
-          {% else %}
-            <p class="empty-state">No hay pacientes en atención.</p>
-          {% endif %}
+                    {% if patient.openemr_main_url %}
+                      <a
+                        class="btn btn-secondary btn-small btn-openemr"
+                        href="{{ patient.openemr_main_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        OpenEMR
+                      </a>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            {% else %}
+              <p class="empty-state">No hay pacientes en atención.</p>
+            {% endif %}
+          </div>
         </div>
 
         <div class="doctor-column">
@@ -220,15 +223,60 @@
             <span id="completed-count">{{ completed_patients|length }}</span>
           </div>
 
-          {% if completed_patients %}
-            {% for patient in completed_patients %}
+          <div id="completed-patients-container">
+            {% if completed_patients %}
+              {% for patient in completed_patients %}
+                <article class="queue-item queue-item-muted">
+                  <div>
+                    <span class="status-pill status-completed">Atendido</span>
+                    <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
+                    <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
+                    <p class="doctor-meta">
+                      Finalizado: {{ patient.finished_at_display }}
+                    </p>
+
+                    {% if patient.openemr_main_url %}
+                      <a
+                        class="small-link doctor-openemr-link"
+                        href="{{ patient.openemr_main_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Abrir OpenEMR
+                      </a>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            {% else %}
+              <p class="empty-state">Sin pacientes atendidos en esta fecha.</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="doctor-section"
+        id="other-patients-section"
+        {% if not other_patients %}hidden{% endif %}
+      >
+        <div class="doctor-section-header">
+          <h2>Otros estados</h2>
+          <span id="other-count">{{ other_patients|length }}</span>
+        </div>
+
+        <div id="other-patients-container">
+          {% if other_patients %}
+            {% for patient in other_patients %}
               <article class="queue-item queue-item-muted">
                 <div>
-                  <span class="status-pill status-completed">Atendido</span>
+                  <span class="status-pill status-other">
+                    {{ patient.status }}
+                  </span>
                   <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
                   <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
                   <p class="doctor-meta">
-                    Finalizado: {{ patient.finished_at_display }}
+                    {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
                   </p>
 
                   {% if patient.openemr_main_url %}
@@ -244,49 +292,13 @@
                 </div>
               </article>
             {% endfor %}
-          {% else %}
-            <p class="empty-state">Sin pacientes atendidos en esta fecha.</p>
           {% endif %}
         </div>
       </section>
-
-      {% if other_patients %}
-        <section class="doctor-section">
-          <div class="doctor-section-header">
-            <h2>Otros estados</h2>
-            <span id="other-count">{{ other_patients|length }}</span>
-          </div>
-
-          {% for patient in other_patients %}
-            <article class="queue-item queue-item-muted">
-              <div>
-                <span class="status-pill status-other">
-                  {{ patient.status }}
-                </span>
-                <h3>{{ patient.patient_name or "Paciente sin nombre" }}</h3>
-                <p>{{ patient.visit_reason or "Sin motivo registrado" }}</p>
-                <p class="doctor-meta">
-                  {{ patient.doctor_name or "Sin asignar" }} · {{ patient.created_at_display }}
-                </p>
-
-                {% if patient.openemr_main_url %}
-                  <a
-                    class="small-link doctor-openemr-link"
-                    href="{{ patient.openemr_main_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Abrir OpenEMR
-                  </a>
-                {% endif %}
-              </div>
-            </article>
-          {% endfor %}
-        </section>
-      {% endif %}
     </section>
   </main>
-    <script>
+
+  <script>
     const DOCTOR_DASHBOARD_POLL_MS = 5000;
 
     function escapeHtml(value) {
@@ -321,6 +333,8 @@
         ? "btn btn-secondary btn-openemr"
         : "btn btn-secondary btn-small btn-openemr";
 
+      const buttonText = large ? "Abrir OpenEMR" : "OpenEMR";
+
       return `
         <a
           class="${buttonClass}"
@@ -328,7 +342,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          OpenEMR
+          ${buttonText}
         </a>
       `;
     }
@@ -470,6 +484,37 @@
       `;
     }
 
+    function renderOtherPatient(patient) {
+      return `
+        <article class="queue-item queue-item-muted">
+          <div>
+            <span class="status-pill status-other">
+              ${escapeHtml(patient.status || "other")}
+            </span>
+            <h3>${escapeHtml(patient.patient_name || "Paciente sin nombre")}</h3>
+            <p>${escapeHtml(patient.visit_reason || "Sin motivo registrado")}</p>
+            <p class="doctor-meta">
+              ${escapeHtml(patient.doctor_name || "Sin asignar")} ·
+              ${escapeHtml(patient.created_at_display || "Sin hora")}
+            </p>
+
+            ${
+              patient.openemr_main_url
+                ? `<a
+                    class="small-link doctor-openemr-link"
+                    href="${escapeHtml(patient.openemr_main_url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir OpenEMR
+                  </a>`
+                : ""
+            }
+          </div>
+        </article>
+      `;
+    }
+
     function renderList(items, renderer, emptyMessage) {
       if (!items || items.length === 0) {
         return `<p class="empty-state">${escapeHtml(emptyMessage)}</p>`;
@@ -523,12 +568,26 @@
             "Sin pacientes atendidos en esta fecha."
           );
 
+        const otherSection = document.getElementById("other-patients-section");
+        const otherPatients = data.other_patients || [];
+
+        document.getElementById("other-patients-container").innerHTML =
+          otherPatients.map(renderOtherPatient).join("");
+
+        otherSection.hidden = otherPatients.length === 0;
+
         document.getElementById("pending-count").textContent =
           data.counts.pending;
         document.getElementById("in-progress-count").textContent =
           data.counts.in_progress;
         document.getElementById("completed-count").textContent =
           data.counts.completed;
+
+        const otherCount = document.getElementById("other-count");
+
+        if (otherCount) {
+          otherCount.textContent = data.counts.other;
+        }
       } catch (error) {
         console.warn("No se pudo actualizar el portal médico.", error);
       }
