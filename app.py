@@ -958,6 +958,34 @@ def create_app():
             other_patients=queue["other"],
         )
 
+    @app.route("/doctor/dashboard/data")
+    @doctor_auth_required
+    def doctor_dashboard_data():
+        selected_date = request.args.get("date") or date.today().isoformat()
+        selected_doctor = request.args.get("doctor") or ""
+
+        rows = list_patient_queue_by_date(queue_date=selected_date)
+        rows = prepare_doctor_queue_rows(rows)
+        rows = filter_queue_rows_by_doctor(rows, selected_doctor)
+
+        queue = split_doctor_queue(rows)
+
+        return jsonify(
+            {
+                "next_patient": queue["next_patient"],
+                "pending_patients": queue["pending"],
+                "in_progress_patients": queue["in_progress"],
+                "completed_patients": queue["completed"],
+                "other_patients": queue["other"],
+                "counts": {
+                    "pending": len(queue["pending"]),
+                    "in_progress": len(queue["in_progress"]),
+                    "completed": len(queue["completed"]),
+                    "other": len(queue["other"]),
+                },
+            }
+        )
+
     @app.route("/doctor/queue/<int:queue_id>/start", methods=["POST"])
     @doctor_auth_required
     def doctor_queue_start(queue_id):
