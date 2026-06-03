@@ -19,3 +19,11 @@ data/*.json
 # Local OpenEMR token files
 /data/openemr_tokens*.json
 /data/*.json
+
+# Local OpenEMR secrets/tokens
+data/*token*.json
+data/openemr_tokens*.json
+
+# Local OpenEMR secrets/tokens
+data/*token*.json
+data/openemr_tokens*.json
