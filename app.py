@@ -242,16 +242,13 @@ def format_dashboard_datetime(value):
         return str(value)
 
 
-def build_openemr_patient_url(openemr_pid):
-    if not openemr_pid:
+def build_openemr_main_url():
+    openemr_main_url = str(Config.OPENEMR_MAIN_URL or "").strip()
+
+    if not openemr_main_url:
         return None
 
-    template = str(Config.OPENEMR_PATIENT_LINK_TEMPLATE or "").strip()
-
-    if not template:
-        return None
-
-    return template.format(pid=openemr_pid)
+    return openemr_main_url
 
 
 def prepare_doctor_queue_rows(rows):
@@ -269,9 +266,7 @@ def prepare_doctor_queue_rows(rows):
         prepared["finished_at_display"] = format_dashboard_datetime(
             prepared.get("finished_at")
         )
-        prepared["openemr_patient_url"] = build_openemr_patient_url(
-            prepared.get("openemr_pid")
-        )
+        prepared["openemr_main_url"] = build_openemr_main_url()
 
         prepared_rows.append(prepared)
 
