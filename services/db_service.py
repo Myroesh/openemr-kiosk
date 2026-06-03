@@ -349,6 +349,34 @@ def list_patient_queue_by_date(queue_date=None, doctor_id=None):
 
     return [dict(row) for row in rows]
 
+def list_completed_patient_queue_by_date_range(
+    date_from=None,
+    date_to=None,
+    doctor_name=None,
+):
+    normalized_date_from = date_from or _today_iso()
+    normalized_date_to = date_to or normalized_date_from
+    normalized_doctor_name = str(doctor_name or "").strip()
+
+    query = """
+        SELECT *
+        FROM patient_queue
+        WHERE queue_date >= ?
+          AND queue_date <= ?
+          AND status = 'completed'
+    """
+    params = [normalized_date_from, normalized_date_to]
+
+    if normalized_doctor_name:
+        query += " AND doctor_name = ?"
+        params.append(normalized_doctor_name)
+
+    query += " ORDER BY doctor_name ASC, started_at ASC, finished_at ASC, id ASC"
+
+    with get_connection() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    return [dict(row) for row in rows]
 
 def list_patient_queue_by_status(status, queue_date=None, doctor_id=None):
     _validate_queue_status(status)

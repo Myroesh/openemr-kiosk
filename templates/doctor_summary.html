@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Resumen de atenciones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="admin-page doctor-page">
+    <section class="admin-card doctor-card">
+      <header class="admin-header doctor-header">
+        <div>
+          <h1>Resumen de atenciones</h1>
+          <p class="doctor-subtitle">
+            Atenciones realizadas por profesional, pacientes atendidos y tiempos de atención.
+          </p>
+        </div>
+
+        <div class="doctor-header-actions">
+          <a class="small-link" href="/doctor/dashboard">Volver al portal médico</a>
+          <a class="small-link" href="/">Volver al kiosko</a>
+        </div>
+      </header>
+
+      <form class="doctor-filters" method="get" action="/doctor/summary">
+        <div>
+          <label for="date_from">Desde</label>
+          <input
+            id="date_from"
+            name="date_from"
+            type="date"
+            value="{{ selected_date_from }}"
+          >
+        </div>
+
+        <div>
+          <label for="date_to">Hasta</label>
+          <input
+            id="date_to"
+            name="date_to"
+            type="date"
+            value="{{ selected_date_to }}"
+          >
+        </div>
+
+        <div>
+          <label for="doctor">Profesional</label>
+          <select id="doctor" name="doctor">
+            <option value="">Todos los profesionales</option>
+            {% for professional in professionals %}
+              <option
+                value="{{ professional }}"
+                {% if selected_doctor == professional %}selected{% endif %}
+              >
+                {{ professional }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button class="btn doctor-filter-btn" type="submit">
+          Filtrar
+        </button>
+      </form>
+
+      <section class="summary-kpis">
+        <article class="summary-kpi">
+          <span>Pacientes atendidos</span>
+          <strong>{{ totals.completed_count }}</strong>
+        </article>
+
+        <article class="summary-kpi">
+          <span>Atenciones con duración</span>
+          <strong>{{ totals.valid_duration_count }}</strong>
+        </article>
+
+        <article class="summary-kpi">
+          <span>Promedio general</span>
+          <strong>{{ totals.average_duration_display }}</strong>
+        </article>
+
+        <article class="summary-kpi">
+          <span>Tiempo total</span>
+          <strong>{{ totals.total_duration_display }}</strong>
+        </article>
+      </section>
+
+      <section class="doctor-section">
+        <div class="doctor-section-header">
+          <h2>Resumen por profesional</h2>
+        </div>
+
+        {% if summaries %}
+          <div class="summary-table-wrapper">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Profesional</th>
+                  <th>Atendidos</th>
+                  <th>Con duración</th>
+                  <th>Sin duración</th>
+                  <th>Promedio</th>
+                  <th>Total</th>
+                  <th>Primera atención</th>
+                  <th>Última atención</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for summary in summaries %}
+                  <tr>
+                    <td>{{ summary.doctor_name }}</td>
+                    <td>{{ summary.completed_count }}</td>
+                    <td>{{ summary.valid_duration_count }}</td>
+                    <td>{{ summary.invalid_duration_count }}</td>
+                    <td>{{ summary.average_duration_display }}</td>
+                    <td>{{ summary.total_duration_display }}</td>
+                    <td>{{ summary.first_started_at_display }}</td>
+                    <td>{{ summary.last_finished_at_display }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="empty-state">
+            No hay atenciones completadas para este rango de fechas.
+          </p>
+        {% endif %}
+      </section>
+
+      {% if summaries %}
+        <section class="doctor-section">
+          <div class="doctor-section-header">
+            <h2>Detalle de pacientes atendidos</h2>
+          </div>
+
+          {% for summary in summaries %}
+            <article class="summary-detail-card">
+              <header class="summary-detail-header">
+                <div>
+                  <h3>{{ summary.doctor_name }}</h3>
+                  <p>
+                    {{ summary.completed_count }} pacientes atendidos ·
+                    Promedio: {{ summary.average_duration_display }}
+                  </p>
+                </div>
+              </header>
+
+              <div class="summary-table-wrapper">
+                <table class="summary-table">
+                  <thead>
+                    <tr>
+                      <th>Inicio</th>
+                      <th>Fin</th>
+                      <th>Duración</th>
+                      <th>Paciente</th>
+                      <th>Motivo</th>
+                      <th>OpenEMR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for patient in summary.patients %}
+                      <tr>
+                        <td>{{ patient.started_at_display }}</td>
+                        <td>{{ patient.finished_at_display }}</td>
+                        <td>{{ patient.duration_display }}</td>
+                        <td>{{ patient.patient_name or "Paciente sin nombre" }}</td>
+                        <td>{{ patient.visit_reason or "Sin motivo registrado" }}</td>
+                        <td>
+                          {% if patient.openemr_main_url %}
+                            <a
+                              class="small-link"
+                              href="{{ patient.openemr_main_url }}"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Abrir
+                            </a>
+                          {% else %}
+                            —
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          {% endfor %}
+        </section>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

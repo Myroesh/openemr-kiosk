@@ -740,3 +740,116 @@ body.dialog-open {
   display: inline-block;
   margin-top: 10px;
 }
+.doctor-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.summary-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 26px;
+}
+
+.summary-kpi {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 95, 140, 0.06);
+}
+
+.summary-kpi span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-text-soft);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.summary-kpi strong {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.summary-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+.summary-table th,
+.summary-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.summary-table th {
+  color: var(--color-primary-dark);
+  background: #f9fcfd;
+  font-weight: 900;
+}
+
+.summary-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.summary-detail-card {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.summary-detail-card:last-child {
+  margin-bottom: 0;
+}
+
+.summary-detail-header {
+  margin-bottom: 14px;
+}
+
+.summary-detail-header h3 {
+  margin: 0 0 6px;
+  color: var(--color-primary-dark);
+  font-size: 20px;
+}
+
+.summary-detail-header p {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .summary-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .doctor-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .summary-kpis {
+    grid-template-columns: 1fr;
+  }
+}

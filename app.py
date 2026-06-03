@@ -22,6 +22,7 @@ from services.db_service import (
     create_patient_queue_entry,
     create_kiosk_event,
     list_patient_queue_by_date,
+    list_completed_patient_queue_by_date_range,
     update_patient_queue_status,
     list_recent_events,
     list_recent_intakes,
@@ -271,6 +272,150 @@ def prepare_doctor_queue_rows(rows):
         prepared_rows.append(prepared)
 
     return prepared_rows
+
+def parse_dashboard_datetime(value):
+    if not value:
+        return None
+
+    try:
+        return datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def format_duration_seconds(total_seconds):
+    if total_seconds is None:
+        return "Sin dato"
+
+    total_seconds = int(total_seconds)
+    minutes = total_seconds // 60
+
+    if minutes < 60:
+        return f"{minutes} min"
+
+    hours = minutes // 60
+    remaining_minutes = minutes % 60
+
+    if remaining_minutes == 0:
+        return f"{hours} h"
+
+    return f"{hours} h {remaining_minutes} min"
+
+
+def build_attention_summary(rows):
+    grouped = {}
+
+    for row in rows:
+        doctor_name = str(row.get("doctor_name") or "Sin asignar").strip() or "Sin asignar"
+        doctor_id = str(row.get("doctor_id") or "").strip()
+
+        started_at = parse_dashboard_datetime(row.get("started_at"))
+        finished_at = parse_dashboard_datetime(row.get("finished_at"))
+
+        duration_seconds = None
+        duration_display = "Sin dato"
+        has_valid_duration = False
+
+        if started_at and finished_at and finished_at >= started_at:
+            duration_seconds = int((finished_at - started_at).total_seconds())
+            duration_display = format_duration_seconds(duration_seconds)
+            has_valid_duration = True
+
+        prepared_row = dict(row)
+        prepared_row["started_at_display"] = format_dashboard_datetime(
+            prepared_row.get("started_at")
+        )
+        prepared_row["finished_at_display"] = format_dashboard_datetime(
+            prepared_row.get("finished_at")
+        )
+        prepared_row["duration_seconds"] = duration_seconds
+        prepared_row["duration_display"] = duration_display
+        prepared_row["has_valid_duration"] = has_valid_duration
+        prepared_row["openemr_main_url"] = build_openemr_main_url()
+
+        if doctor_name not in grouped:
+            grouped[doctor_name] = {
+                "doctor_name": doctor_name,
+                "doctor_id": doctor_id,
+                "completed_count": 0,
+                "valid_duration_count": 0,
+                "invalid_duration_count": 0,
+                "total_duration_seconds": 0,
+                "average_duration_seconds": None,
+                "total_duration_display": "Sin dato",
+                "average_duration_display": "Sin dato",
+                "first_started_at": None,
+                "last_finished_at": None,
+                "first_started_at_display": "Sin dato",
+                "last_finished_at_display": "Sin dato",
+                "patients": [],
+            }
+
+        summary = grouped[doctor_name]
+        summary["completed_count"] += 1
+        summary["patients"].append(prepared_row)
+
+        if has_valid_duration:
+            summary["valid_duration_count"] += 1
+            summary["total_duration_seconds"] += duration_seconds
+
+            if summary["first_started_at"] is None or started_at < summary["first_started_at"]:
+                summary["first_started_at"] = started_at
+
+            if summary["last_finished_at"] is None or finished_at > summary["last_finished_at"]:
+                summary["last_finished_at"] = finished_at
+        else:
+            summary["invalid_duration_count"] += 1
+
+    summaries = []
+
+    for summary in grouped.values():
+        if summary["valid_duration_count"] > 0:
+            summary["average_duration_seconds"] = (
+                summary["total_duration_seconds"] / summary["valid_duration_count"]
+            )
+            summary["average_duration_display"] = format_duration_seconds(
+                summary["average_duration_seconds"]
+            )
+            summary["total_duration_display"] = format_duration_seconds(
+                summary["total_duration_seconds"]
+            )
+
+        if summary["first_started_at"]:
+            summary["first_started_at_display"] = summary["first_started_at"].strftime(
+                "%d/%m/%Y %H:%M"
+            )
+
+        if summary["last_finished_at"]:
+            summary["last_finished_at_display"] = summary["last_finished_at"].strftime(
+                "%d/%m/%Y %H:%M"
+            )
+
+        summary.pop("first_started_at", None)
+        summary.pop("last_finished_at", None)
+
+        summaries.append(summary)
+
+    summaries.sort(key=lambda item: item["doctor_name"])
+
+    totals = {
+        "completed_count": sum(item["completed_count"] for item in summaries),
+        "valid_duration_count": sum(item["valid_duration_count"] for item in summaries),
+        "invalid_duration_count": sum(item["invalid_duration_count"] for item in summaries),
+        "total_duration_seconds": sum(item["total_duration_seconds"] for item in summaries),
+        "total_duration_display": "Sin dato",
+        "average_duration_display": "Sin dato",
+    }
+
+    if totals["valid_duration_count"] > 0:
+        totals["total_duration_display"] = format_duration_seconds(
+            totals["total_duration_seconds"]
+        )
+        totals["average_duration_display"] = format_duration_seconds(
+            totals["total_duration_seconds"] / totals["valid_duration_count"]
+        )
+
+    return summaries, totals
 
 def create_app():
     app = Flask(__name__)
@@ -985,6 +1130,32 @@ def create_app():
                 },
             }
         )
+
+
+    @app.route("/doctor/summary")
+    @doctor_auth_required
+    def doctor_summary():
+        selected_date_from = request.args.get("date_from") or date.today().isoformat()
+        selected_date_to = request.args.get("date_to") or selected_date_from
+        selected_doctor = request.args.get("doctor") or ""
+
+        completed_rows = list_completed_patient_queue_by_date_range(
+            date_from=selected_date_from,
+            date_to=selected_date_to,
+            doctor_name=selected_doctor,
+        )
+
+        summaries, totals = build_attention_summary(completed_rows)
+
+        return render_template(
+            "doctor_summary.html",
+            selected_date_from=selected_date_from,
+            selected_date_to=selected_date_to,
+            selected_doctor=selected_doctor,
+            professionals=Config.PROFESSIONALS,
+            summaries=summaries,
+            totals=totals,
+        )    
 
     @app.route("/doctor/queue/<int:queue_id>/start", methods=["POST"])
     @doctor_auth_required
