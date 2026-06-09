@@ -1,0 +1,17 @@
+[Unit]
+Description=OpenEMR Kiosk Flask Service
+After=network-online.target apache2.service mariadb.service
+Wants=network-online.target
+
+[Service]
+User=openemr
+Group=openemr
+WorkingDirectory=/opt/openemr-kiosk
+EnvironmentFile=/opt/openemr-kiosk/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/openemr-kiosk/.venv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 "app:create_app()"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
