@@ -830,7 +830,6 @@ Implementación propuesta:
 
 ## Fase 12 - Portal de doctores
 
-## Fase 12 - Portal de doctores
 
 - [x] Crear tabla local `patient_queue`.
 - [x] Conectar flujo de paciente nuevo con `patient_queue`.
