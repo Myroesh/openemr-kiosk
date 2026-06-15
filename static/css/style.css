@@ -853,3 +853,148 @@ body.dialog-open {
     grid-template-columns: 1fr;
   }
 }
+/* Doctor portal UX polish */
+
+.doctor-card {
+  padding: 30px;
+}
+
+.doctor-header {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.doctor-header h1 {
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.1;
+}
+
+.doctor-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-primary-dark);
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(15, 95, 140, 0.06);
+}
+
+.doctor-nav-link:hover {
+  color: var(--color-primary-dark);
+  border-color: rgba(15, 95, 140, 0.28);
+  box-shadow: 0 10px 22px rgba(15, 95, 140, 0.10);
+}
+
+.doctor-filters {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  align-items: end;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fcfd 100%);
+}
+
+.doctor-filter-btn {
+  width: auto;
+  min-width: 150px;
+  justify-self: start;
+}
+
+.doctor-section-header {
+  padding: 0 2px;
+}
+
+.doctor-section-header h2 {
+  font-size: 24px;
+}
+
+.doctor-section-header span {
+  box-shadow: inset 0 0 0 1px rgba(15, 95, 140, 0.06);
+}
+
+.next-patient-card {
+  border: 1px solid rgba(24, 191, 183, 0.48);
+  box-shadow: 0 18px 38px rgba(15, 95, 140, 0.14);
+}
+
+.next-patient-card h3 {
+  font-size: clamp(24px, 2.4vw, 34px);
+  letter-spacing: -0.03em;
+}
+
+.doctor-column {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
+  box-shadow: 0 10px 24px rgba(15, 95, 140, 0.05);
+}
+
+.queue-item {
+  background: #ffffff;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    border-color 0.14s ease;
+}
+
+.queue-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(15, 95, 140, 0.24);
+  box-shadow: 0 12px 26px rgba(15, 95, 140, 0.08);
+}
+
+.queue-item-muted {
+  opacity: 1;
+  background: #f8fafc;
+}
+
+.queue-actions {
+  gap: 8px;
+}
+
+.btn-small {
+  min-height: 42px;
+}
+
+.btn-danger-soft {
+  font-weight: 850;
+}
+
+.status-pill {
+  letter-spacing: 0.01em;
+}
+
+.summary-kpi {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fcfd 100%);
+}
+
+.summary-kpi strong {
+  letter-spacing: -0.04em;
+}
+
+.summary-table th {
+  white-space: nowrap;
+}
+
+.summary-table tbody tr:hover {
+  background: #f9fcfd;
+}
+
+@media (max-width: 720px) {
+  .doctor-card {
+    padding: 20px;
+  }
+
+  .doctor-filter-btn {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .doctor-header-actions {
+    width: 100%;
+  }
+
+  .doctor-nav-link {
+    width: 100%;
+  }
+}
