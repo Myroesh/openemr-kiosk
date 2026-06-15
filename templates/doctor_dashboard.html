@@ -365,22 +365,7 @@
       );
     }
 
-    function updateLastRefreshLabel() {
-      const label = document.getElementById("last-update-label");
-
-      if (!label) {
-        return;
-      }
-
-      const now = new Date();
-      const formatted = now.toLocaleTimeString("es-BO", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
-
-      label.textContent = `Última actualización: ${formatted}`;
-    }
+   
 
     function renderOpenEmrButton(patient, large = false) {
       if (!patient.openemr_main_url) {
@@ -391,7 +376,7 @@
         ? "btn btn-secondary btn-openemr"
         : "btn btn-secondary btn-small btn-openemr";
 
-      const buttonText = large ? "Abrir OpenEMR" : "OpenEMR";
+      const buttonText = large ? "Abrir historia clínica" : "Historia clínica";
 
       return `
         <a
@@ -647,13 +632,13 @@
           otherCount.textContent = data.counts.other;
         }
 
-        updateLastRefreshLabel();
+        
       } catch (error) {
         console.warn("No se pudo actualizar el portal médico.", error);
       }
     }
 
-    updateLastRefreshLabel();
+   
     setInterval(refreshDoctorDashboard, DOCTOR_DASHBOARD_POLL_MS);
   </script>
 </body>

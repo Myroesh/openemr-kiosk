@@ -870,12 +870,12 @@ UX/UI del portal médico:
 - [ ] Ajustar contraste, tamaños y espaciado si los doctores reportan dificultad de lectura.
 - [ ] Revisar experiencia en tablet o pantalla chica.
 - [ ] Evaluar separar CSS del portal médico en `static/css/doctor.css`.
-- [ ] Asegurar newline final y limpieza de formato en `static/css/style.css`.
-- [ ] Revisar si los botones “Cancelar” deben pedir confirmación antes de ejecutar.
-- [ ] Evaluar indicador visual de actualización automática cada 5 segundos.
-- [ ] Evaluar si conviene mostrar “última actualización” en el dashboard.
-- [ ] Recoger feedback de doctores sobre nombres de botones: “En atención”, “Atendido”, “Cancelar”, “OpenEMR”.
-
+- [x] Asegurar newline final y limpieza de formato en `static/css/style.css`.
+- [x] Revisar si los botones “Retirar” deben pedir confirmación antes de ejecutar.
+- [x] Descartar indicador visual de actualización automática por ruido operativo.
+- [x] Descartar mostrar “última actualización” en el dashboard por no aportar al flujo de las doctoras.
+- [x] Ajustar nombres de botones para claridad operativa: “Iniciar atención”, “Finalizar atención”, “Retirar” y “Historia clínica”.
+- [ ] Recoger feedback de doctores sobre nombres de botones durante uso real.
 Pendientes inmediatos:
 
 - [ ] Probar paciente antiguo desde kiosko aparece en portal doctor.

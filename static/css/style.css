@@ -998,28 +998,8 @@ body.dialog-open {
     width: 100%;
   }
 }
-.doctor-live-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin: -10px 0 24px;
-  padding: 12px 14px;
-  border: 1px solid rgba(24, 191, 183, 0.28);
-  border-radius: 14px;
-  background: var(--color-accent-soft);
-  color: var(--color-accent-dark);
-  font-size: 14px;
-  font-weight: 850;
-}
 
-.live-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--color-accent-dark);
-  box-shadow: 0 0 0 5px rgba(24, 191, 183, 0.14);
-}
+
 
 .doctor-section-help {
   margin: -6px 0 14px;
