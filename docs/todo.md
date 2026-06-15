@@ -830,6 +830,8 @@ Implementación propuesta:
 
 ## Fase 12 - Portal de doctores
 
+## Fase 12 - Portal de doctores
+
 - [x] Crear tabla local `patient_queue`.
 - [x] Conectar flujo de paciente nuevo con `patient_queue`.
 - [x] Conectar flujo de paciente antiguo con `patient_queue`.
@@ -848,18 +850,48 @@ Implementación propuesta:
 - [x] Agregar link seguro hacia OpenEMR completo.
 - [x] Registrar cambios de estado en `kiosk_events`.
 - [x] Probar flujo completo kiosko → cola médico → atendido.
-- [ ] Crear vista de resumen de atenciones por profesional.
-- [ ] Calcular pacientes atendidos por profesional.
-- [ ] Calcular tiempo promedio y total de atención.
-- [ ] Mostrar detalle de pacientes atendidos por fecha.
+- [x] Crear vista de resumen de atenciones por profesional.
+- [x] Calcular pacientes atendidos por profesional.
+- [x] Calcular tiempo promedio y total de atención.
+- [x] Mostrar detalle de pacientes atendidos por fecha.
+- [x] Agregar enlace desde `/doctor/dashboard` hacia `/doctor/summary`.
+- [x] Proteger `/doctor/summary` con la misma autenticación del portal médico.
+- [x] Configurar arranque automático del kiosko con Gunicorn y `systemd`.
+
+UX/UI del portal médico:
+
+- [x] Primera pasada visual del portal médico.
+- [x] Convertir links superiores en botones tipo navegación.
+- [x] Mejorar apariencia de filtros.
+- [x] Mejorar jerarquía visual de “Paciente siguiente”.
+- [x] Mejorar cards de pacientes pendientes, en atención y atendidos.
+- [x] Mejorar KPIs y tablas del resumen de atenciones.
+- [ ] Probar visualmente `/doctor/dashboard` con datos reales de varios pacientes.
+- [ ] Probar visualmente `/doctor/summary` con varios profesionales y rangos de fechas.
+- [ ] Ajustar contraste, tamaños y espaciado si los doctores reportan dificultad de lectura.
+- [ ] Revisar experiencia en tablet o pantalla chica.
+- [ ] Evaluar separar CSS del portal médico en `static/css/doctor.css`.
+- [ ] Asegurar newline final y limpieza de formato en `static/css/style.css`.
+- [ ] Revisar si los botones “Cancelar” deben pedir confirmación antes de ejecutar.
+- [ ] Evaluar indicador visual de actualización automática cada 5 segundos.
+- [ ] Evaluar si conviene mostrar “última actualización” en el dashboard.
+- [ ] Recoger feedback de doctores sobre nombres de botones: “En atención”, “Atendido”, “Cancelar”, “OpenEMR”.
 
 Pendientes inmediatos:
 
-- [ ] Limpiar CSS/newline.
 - [ ] Probar paciente antiguo desde kiosko aparece en portal doctor.
 - [ ] Probar reinicio completo del servidor y persistencia de cola.
 - [ ] Probar comportamiento cuando OpenEMR tiene sesión expirada.
+- [ ] Probar que el servicio `openemr-kiosk` levanta automáticamente al encender el servidor.
+- [ ] Revisar logs de `systemd` con `journalctl -u openemr-kiosk -f` después de reinicio.
+- [ ] Recoger feedback inicial de doctores usando el portal en operación real.
 
+Nota:
+
+- El objetivo inmediato del portal médico no es perfección visual, sino permitir uso real temprano para detectar requerimientos operativos.
+- OpenEMR sigue siendo la fuente clínica principal.
+- El portal médico solo maneja flujo operativo: cola, estado de atención y resumen local.
+- Los cambios UX/UI deben hacerse en commits pequeños, sin mezclar con lógica crítica de OpenEMR.
 ---
 
 # 5. Futuras mejoras
