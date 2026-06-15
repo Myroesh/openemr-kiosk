@@ -17,7 +17,7 @@
         <div>
           <h1>Portal médico</h1>
           <p class="doctor-subtitle">
-            Cola operativa de pacientes por fecha y profesional.
+            Use este panel para llamar pacientes, iniciar atención y finalizar consultas. La información clínica sigue en OpenEMR.
           </p>
         </div>
 
@@ -57,10 +57,15 @@
         </button>
       </form>
 
+    
       <section class="doctor-section">
         <div class="doctor-section-header">
           <h2>Paciente siguiente</h2>
         </div>
+
+        <p class="doctor-section-help">
+          Este es el próximo paciente pendiente según orden de llegada y filtro seleccionado.
+        </p>
 
         <div id="next-patient-container">
           {% if next_patient %}
@@ -81,14 +86,18 @@
                 <form method="post" action="/doctor/queue/{{ next_patient.id }}/start">
                   <input type="hidden" name="next" value="{{ request.full_path }}">
                   <button class="btn" type="submit">
-                    Marcar como en atención
+                    Iniciar atención
                   </button>
                 </form>
 
-                <form method="post" action="/doctor/queue/{{ next_patient.id }}/cancel">
+                <form
+                  method="post"
+                  action="/doctor/queue/{{ next_patient.id }}/cancel"
+                  onsubmit="return confirmQueueCancel()"
+                >
                   <input type="hidden" name="next" value="{{ request.full_path }}">
                   <button class="btn btn-danger-soft" type="submit">
-                    Cancelar
+                    Retirar de cola
                   </button>
                 </form>
 
@@ -119,6 +128,10 @@
             <span id="pending-count">{{ pending_patients|length }}</span>
           </div>
 
+          <p class="doctor-section-help">
+            Pacientes que están esperando ser llamados.
+          </p>
+
           <div id="pending-patients-container">
             {% if pending_patients %}
               {% for patient in pending_patients %}
@@ -136,14 +149,18 @@
                     <form method="post" action="/doctor/queue/{{ patient.id }}/start">
                       <input type="hidden" name="next" value="{{ request.full_path }}">
                       <button class="btn btn-small" type="submit">
-                        En atención
+                        Iniciar atención
                       </button>
                     </form>
 
-                    <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
+                    <form
+                      method="post"
+                      action="/doctor/queue/{{ patient.id }}/cancel"
+                      onsubmit="return confirmQueueCancel()"
+                    >
                       <input type="hidden" name="next" value="{{ request.full_path }}">
                       <button class="btn btn-small btn-danger-soft" type="submit">
-                        Cancelar
+                        Retirar
                       </button>
                     </form>
 
@@ -172,6 +189,10 @@
             <span id="in-progress-count">{{ in_progress_patients|length }}</span>
           </div>
 
+          <p class="doctor-section-help">
+            Pacientes que ya fueron tomados por el profesional.
+          </p>
+
           <div id="in-progress-patients-container">
             {% if in_progress_patients %}
               {% for patient in in_progress_patients %}
@@ -189,14 +210,18 @@
                     <form method="post" action="/doctor/queue/{{ patient.id }}/complete">
                       <input type="hidden" name="next" value="{{ request.full_path }}">
                       <button class="btn btn-small" type="submit">
-                        Atendido
+                        Finalizar atención
                       </button>
                     </form>
 
-                    <form method="post" action="/doctor/queue/{{ patient.id }}/cancel">
+                    <form
+                      method="post"
+                      action="/doctor/queue/{{ patient.id }}/cancel"
+                      onsubmit="return confirmQueueCancel()"
+                    >
                       <input type="hidden" name="next" value="{{ request.full_path }}">
                       <button class="btn btn-small btn-danger-soft" type="submit">
-                        Cancelar
+                        Retirar
                       </button>
                     </form>
 
@@ -224,6 +249,10 @@
             <h2>Atendidos</h2>
             <span id="completed-count">{{ completed_patients|length }}</span>
           </div>
+
+          <p class="doctor-section-help">
+            Pacientes finalizados durante la fecha seleccionada.
+          </p>
 
           <div id="completed-patients-container">
             {% if completed_patients %}
@@ -266,6 +295,10 @@
           <h2>Otros estados</h2>
           <span id="other-count">{{ other_patients|length }}</span>
         </div>
+
+        <p class="doctor-section-help">
+          Pacientes retirados, cancelados o con estados especiales.
+        </p>
 
         <div id="other-patients-container">
           {% if other_patients %}
@@ -326,6 +359,29 @@
       return `<input type="hidden" name="next" value="${escapeHtml(window.location.pathname + window.location.search)}">`;
     }
 
+    function confirmQueueCancel() {
+      return window.confirm(
+        "¿Seguro que quieres retirar este paciente de la cola? Esta acción lo quitará del flujo de atención del día."
+      );
+    }
+
+    function updateLastRefreshLabel() {
+      const label = document.getElementById("last-update-label");
+
+      if (!label) {
+        return;
+      }
+
+      const now = new Date();
+      const formatted = now.toLocaleTimeString("es-BO", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+
+      label.textContent = `Última actualización: ${formatted}`;
+    }
+
     function renderOpenEmrButton(patient, large = false) {
       if (!patient.openemr_main_url) {
         return "";
@@ -374,14 +430,14 @@
             <form method="post" action="/doctor/queue/${patient.id}/start">
               ${hiddenNextInput()}
               <button class="btn" type="submit">
-                Marcar como en atención
+                Iniciar atención
               </button>
             </form>
 
-            <form method="post" action="/doctor/queue/${patient.id}/cancel">
+            <form method="post" action="/doctor/queue/${patient.id}/cancel" onsubmit="return confirmQueueCancel()">
               ${hiddenNextInput()}
               <button class="btn btn-danger-soft" type="submit">
-                Cancelar
+                Retirar de cola
               </button>
             </form>
 
@@ -408,14 +464,14 @@
             <form method="post" action="/doctor/queue/${patient.id}/start">
               ${hiddenNextInput()}
               <button class="btn btn-small" type="submit">
-                En atención
+                Iniciar atención
               </button>
             </form>
 
-            <form method="post" action="/doctor/queue/${patient.id}/cancel">
+            <form method="post" action="/doctor/queue/${patient.id}/cancel" onsubmit="return confirmQueueCancel()">
               ${hiddenNextInput()}
               <button class="btn btn-small btn-danger-soft" type="submit">
-                Cancelar
+                Retirar
               </button>
             </form>
 
@@ -441,14 +497,14 @@
             <form method="post" action="/doctor/queue/${patient.id}/complete">
               ${hiddenNextInput()}
               <button class="btn btn-small" type="submit">
-                Atendido
+                Finalizar atención
               </button>
             </form>
 
-            <form method="post" action="/doctor/queue/${patient.id}/cancel">
+            <form method="post" action="/doctor/queue/${patient.id}/cancel" onsubmit="return confirmQueueCancel()">
               ${hiddenNextInput()}
               <button class="btn btn-small btn-danger-soft" type="submit">
-                Cancelar
+                Retirar
               </button>
             </form>
 
@@ -590,11 +646,14 @@
         if (otherCount) {
           otherCount.textContent = data.counts.other;
         }
+
+        updateLastRefreshLabel();
       } catch (error) {
         console.warn("No se pudo actualizar el portal médico.", error);
       }
     }
 
+    updateLastRefreshLabel();
     setInterval(refreshDoctorDashboard, DOCTOR_DASHBOARD_POLL_MS);
   </script>
 </body>
